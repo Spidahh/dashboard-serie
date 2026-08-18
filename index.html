@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1116">
+<title>Dashboard Serie</title>
+<link rel="icon" href="icon.svg">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<!-- ============ SCHERMATA LOGIN ============ -->
+<section id="login" class="login hidden">
+  <div class="login-box">
+    <h1>Dashboard Serie</h1>
+    <p class="muted">Collega il tuo account Simkl. Si fa una volta sola: il collegamento dura circa 5 anni.</p>
+
+    <div id="loginStep1">
+      <button id="btnLogin" class="btn btn-big">Collega Simkl</button>
+    </div>
+
+    <div id="loginStep2" class="hidden">
+      <p>1. Apri questa pagina:</p>
+      <a id="pinUrl" class="pin-url" href="https://simkl.com/pin" target="_blank" rel="noopener">simkl.com/pin</a>
+      <p>2. Inserisci questo codice:</p>
+      <div id="pinCode" class="pin-code">------</div>
+      <p class="muted" id="pinStatus">In attesa che tu confermi su Simkl…</p>
+      <button id="btnCancelPin" class="btn btn-ghost">Annulla</button>
+    </div>
+
+    <p class="err hidden" id="loginErr"></p>
+  </div>
+</section>
+
+<!-- ============ APP ============ -->
+<div id="app" class="hidden">
+
+  <header class="topbar">
+    <div class="topbar-row">
+      <h1 class="brand">Da guardare</h1>
+      <div class="spacer"></div>
+      <span id="syncInfo" class="sync-info"></span>
+      <button id="btnSync" class="icon-btn" title="Aggiorna">&#8635;</button>
+      <button id="btnSettings" class="icon-btn" title="Impostazioni">&#9881;</button>
+    </div>
+    <div class="topbar-row controls">
+      <input id="search" class="search" type="search" placeholder="Cerca…" autocomplete="off">
+      <div class="chips" id="typeChips">
+        <button class="chip on" data-type="all">Tutto</button>
+        <button class="chip" data-type="shows">Serie TV</button>
+        <button class="chip" data-type="anime">Anime</button>
+      </div>
+      <select id="sort" class="select" title="Ordinamento">
+        <option value="recent">Uscita più recente</option>
+        <option value="backlog">Più arretrati</option>
+        <option value="oldest">Uscita più vecchia</option>
+        <option value="lastwatch">Visto di recente</option>
+        <option value="title">Titolo</option>
+      </select>
+    </div>
+  </header>
+
+  <main>
+    <!-- DA GUARDARE ORA -->
+    <section class="block">
+      <h2 class="block-title">Da guardare ora <span class="count" id="cWatch">0</span></h2>
+      <div id="watchBands"></div>
+      <p id="emptyWatch" class="empty hidden">Sei in pari. Non c'è niente di arretrato.</p>
+    </section>
+
+    <!-- IN ARRIVO -->
+    <section class="block collapsible" id="secSoon">
+      <h2 class="block-title toggle" data-target="gridSoon">In arrivo <span class="count" id="cSoon">0</span><span class="caret">&#9662;</span></h2>
+      <div id="gridSoon" class="grid grid-sm"></div>
+    </section>
+
+    <!-- IN ATTESA -->
+    <section class="block collapsible closed" id="secWaiting">
+      <h2 class="block-title toggle" data-target="gridWaiting">In attesa <span class="count" id="cWaiting">0</span><span class="caret">&#9662;</span></h2>
+      <p class="hint">Sei in pari. Non c'è ancora una data per il prossimo episodio.</p>
+      <div id="gridWaiting" class="grid grid-sm"></div>
+    </section>
+
+    <!-- IN PAUSA -->
+    <section class="block collapsible closed" id="secPaused">
+      <h2 class="block-title toggle" data-target="gridPaused">In pausa <span class="count" id="cPaused">0</span><span class="caret">&#9662;</span></h2>
+      <p class="hint">Hanno episodi usciti che non hai visto, ma sei fermo da troppo tempo.</p>
+      <div id="gridPaused" class="grid grid-sm"></div>
+    </section>
+
+    <!-- DA INIZIARE -->
+    <section class="block collapsible closed" id="secStart">
+      <h2 class="block-title toggle" data-target="gridStart">Da iniziare <span class="count" id="cStart">0</span><span class="caret">&#9662;</span></h2>
+      <div id="gridStart" class="grid grid-sm"></div>
+    </section>
+
+    <!-- ARCHIVIO -->
+    <section class="block collapsible closed" id="secArchive">
+      <h2 class="block-title toggle" data-target="gridArchive">Archivio <span class="count" id="cArchive">0</span><span class="caret">&#9662;</span></h2>
+      <div id="gridArchive" class="grid grid-sm"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+</div>
+
+<!-- ============ IMPOSTAZIONI ============ -->
+<div id="settings" class="modal hidden">
+  <div class="modal-box">
+    <h2>Impostazioni</h2>
+
+    <label class="field">
+      <span>Metti in pausa dopo <b id="vPause">60</b> giorni senza guardare</span>
+      <input id="sPause" type="range" min="14" max="365" step="1">
+    </label>
+
+    <label class="field">
+      <span>Una serie è ancora "calda" se ha mandato in onda un episodio negli ultimi <b id="vHot">90</b> giorni</span>
+      <input id="sHot" type="range" min="14" max="365" step="1">
+      <small class="fieldnote">Finché è calda resta in griglia anche se tu sei fermo da mesi: c'è ancora poco da recuperare.</small>
+    </label>
+
+    <label class="field">
+      <span>Dopo <b id="vAbandon">365</b> giorni senza guardarla la considero abbandonata</span>
+      <input id="sAbandon" type="range" min="60" max="1460" step="5">
+      <small class="fieldnote">Vale anche per le serie ancora in onda: solo un episodio davvero nuovo la riporta in griglia.</small>
+    </label>
+
+    <label class="field">
+      <span>Considera "tornata" se il nuovo episodio è uscito da meno di <b id="vReturn">45</b> giorni</span>
+      <input id="sReturn" type="range" min="7" max="180" step="1">
+    </label>
+
+    <label class="check">
+      <input id="sEnTitles" type="checkbox">
+      <span>Usa il titolo ufficiale in inglese quando esiste (<i>Tomb Raider King</i> invece di <i>Dogul Wang</i>)</span>
+    </label>
+
+    <label class="check">
+      <input id="sDropped" type="checkbox">
+      <span>Fai riemergere anche le serie completate o abbandonate quando escono episodi nuovi</span>
+    </label>
+
+    <label class="check">
+      <input id="sAutoRefresh" type="checkbox">
+      <span>Controlla se ci sono novità ogni 15 minuti mentre la pagina è aperta</span>
+    </label>
+
+    <hr>
+    <div class="settings-actions">
+      <button id="btnFullSync" class="btn btn-ghost">Risincronizza tutto</button>
+      <button id="btnExport" class="btn btn-ghost">Esporta impostazioni</button>
+      <button id="btnLogout" class="btn btn-danger">Scollega account</button>
+    </div>
+    <p class="muted small" id="statsLine"></p>
+
+    <button id="btnCloseSettings" class="btn btn-big">Chiudi</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

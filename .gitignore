@@ -1,0 +1,5 @@
+# niente da ignorare: il progetto è fatto di soli file statici.
+# I dati personali non stanno qui, stanno nel browser (localStorage).
+*.log
+Thumbs.db
+desktop.ini
