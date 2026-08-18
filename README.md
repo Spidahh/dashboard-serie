@@ -10,15 +10,32 @@ serie spostata di lista, nessuna valutazione. Sola lettura.
 
 ---
 
-## Come si avvia
+## Dove sta
 
-Doppio clic su **`avvia.cmd`**.
+**https://spidahh.github.io/dashboard-serie/**
 
-Apre il browser su `http://localhost:5173/index.html`. La prima volta ti chiede di
-collegare Simkl: ti mostra un codice di 5 caratteri, tu lo inserisci su
-[simkl.com/pin](https://simkl.com/pin) e hai finito. Il collegamento dura circa 5 anni.
+Aprilo e basta. Niente da installare, niente server da far partire.
 
-La finestra nera del server deve restare aperta finché usi la pagina.
+La prima volta ti chiede di collegare Simkl: compare un codice di 5 caratteri, lo
+inserisci su [simkl.com/pin](https://simkl.com/pin) e hai finito. Il collegamento
+dura circa 5 anni.
+
+Il collegamento vale per quel dispositivo: sul telefono lo rifai una volta.
+
+### Installarlo come app
+
+Sul telefono: menù del browser → *Aggiungi a schermata Home*.
+Sul computer: l'icona di installazione nella barra degli indirizzi.
+
+Da lì in poi si apre a schermo intero come un'app, e resta apribile anche senza rete.
+
+### Lavorarci in locale
+
+Serve solo per modificare il codice: doppio clic su **`avvia.cmd`**, che apre
+`http://localhost:5173`. La finestra nera del server deve restare aperta.
+
+In locale il service worker è disattivato apposta, altrimenti continuerebbe a
+servire i file vecchi mentre lavori.
 
 ---
 
