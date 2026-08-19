@@ -104,8 +104,18 @@ Poi decide dove metterlo:
 - ...a meno che non ci sia un segnale recente → **Da guardare ora** con badge TORNATA
 - zero arretrati e una data nota → **In arrivo**
 - zero arretrati e nessuna data → **In attesa**
+- abbandonata e senza novità → **Archivio**, sempre
 
 Con zero arretrati non finisce **mai** in pausa: non c'è niente da recuperare.
+E una serie che hai abbandonato non compare mai tra quelle in attesa o in arrivo:
+non stai aspettando niente.
+
+### Quando i contatori di Simkl sbagliano
+
+Gli arretrati si contano con una sottrazione, ma i contatori di Simkl a volte
+restano indietro, e su una serie da mille episodi basta poco per far comparire
+roba che hai già visto. Quando Simkl dice che non c'è un prossimo episodio, la
+dashboard crede a quello e non alla sottrazione.
 
 ### Le tre soglie, e perché sono tre
 
