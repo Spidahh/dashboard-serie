@@ -459,7 +459,16 @@ function analyse(key, e, now) {
   const total = e.total_episodes_count || 0;
   const notAired = e.not_aired_episodes_count || 0;
   const watched = e.watched_episodes_count || 0;
-  const backlog = Math.max(0, total - notAired - watched);   // arretrati già usciti
+
+  const status = e.status;
+  const live = status === 'watching' || status === 'hold';
+
+  /* Gli arretrati si contano così: usciti meno visti. Ma i contatori di Simkl
+     a volte restano indietro, e su una serie lunghissima basta poco per far
+     comparire episodi che in realtà hai già visto. Quando Simkl dice che non
+     c'è un prossimo episodio, quella è la parola definitiva: sei in pari. */
+  const inPari = live && !e.next_to_watch && !e.next_to_watch_info;
+  const backlog = inPari ? 0 : Math.max(0, total - notAired - watched);
 
   const lastAt = e.last_watched_at ? Date.parse(e.last_watched_at) : null;
   const nextT = e.next_to_watch_info?.date ? Date.parse(e.next_to_watch_info.date) : null;
@@ -478,8 +487,6 @@ function analyse(key, e, now) {
   const airedAt = nextT != null && nextT <= now ? nextT : (growAt || lastAt || null);
   const upcomingAt = cal && cal.t > now ? cal.t : (nextT != null && nextT > now ? nextT : null);
 
-  const status = e.status;
-  const live = status === 'watching' || status === 'hold';
   const parked = status === 'completed' || status === 'dropped';
 
   let bucket, back = false;
@@ -506,8 +513,10 @@ function analyse(key, e, now) {
 
   } else {
     // Zero arretrati: sei in pari. Non è mai "in pausa", non c'è niente da recuperare.
-    if (upcomingAt) bucket = 'soon';                          // c'è già una data
-    else if (live || notAired > 0) bucket = 'waiting';        // in pari, si aspetta
+    // Una serie che hai abbandonato non è "in attesa": non stai aspettando niente.
+    if (status === 'dropped') bucket = 'archive';
+    else if (upcomingAt && (live || status === 'completed')) bucket = 'soon';
+    else if (live) bucket = 'waiting';
     else bucket = 'archive';
   }
 
