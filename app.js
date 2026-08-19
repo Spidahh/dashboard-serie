@@ -936,7 +936,8 @@ boot();
 // lo attivo unicamente sul sito vero, dove serve a far aprire la pagina senza rete.
 const inLocale = ['localhost', '127.0.0.1', ''].includes(location.hostname);
 if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !inLocale) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  // updateViaCache:'none' — il service worker stesso non deve mai arrivare dalla cache
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
 } else if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())).catch(() => {});
 }

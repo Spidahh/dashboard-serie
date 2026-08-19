@@ -1,7 +1,7 @@
 /* Service worker: tiene la pagina apribile anche senza rete.
    I dati arrivano sempre dalla rete o dalla memoria del browser, mai da qui. */
 
-const CACHE = 'dashboard-serie-v1';
+const CACHE = 'dashboard-serie-v2';
 const SHELL = ['./', './index.html', './app.css', './app.js', './icon.svg', './manifest.webmanifest'];
 
 self.addEventListener('install', ev => {
@@ -23,9 +23,12 @@ self.addEventListener('fetch', ev => {
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;   // API e immagini passano dritte alla rete
 
-  // prima la rete: così le modifiche ai file si vedono subito; la cache è solo la rete di sicurezza
+  /* Prima la rete, e con revalidazione forzata: GitHub Pages dichiara i file
+     validi per 10 minuti, quindi senza `no-cache` il browser continuerebbe a
+     servire la versione vecchia anche dopo una modifica. La cache qui sotto
+     resta solo come rete di sicurezza per quando manca la connessione. */
   ev.respondWith(
-    fetch(req)
+    fetch(req, { cache: 'no-cache' })
       .then(res => {
         const copy = res.clone();
         caches.open(CACHE).then(c => c.put(req, copy));
