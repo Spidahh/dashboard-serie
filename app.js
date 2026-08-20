@@ -581,8 +581,7 @@ function analyse(key, e, now) {
     // Zero arretrati: sei in pari. Non è mai "in pausa", non c'è niente da recuperare.
     // Una serie che hai abbandonato non è "in attesa": non stai aspettando niente.
     if (status === 'dropped') bucket = 'archive';
-    else if (upcomingAt && (live || status === 'completed')) bucket = 'soon';
-    else if (live) bucket = 'waiting';
+    else if (live || (status === 'completed' && upcomingAt)) bucket = 'pari';
     else bucket = 'archive';
   }
 
@@ -620,7 +619,7 @@ function render() {
   const st = S.settings;
   const q = ui.search.trim().toLowerCase();
 
-  const groups = { watch: [], soon: [], waiting: [], paused: [], start: [], archive: [] };
+  const groups = { watch: [], pari: [], paused: [], start: [], archive: [] };
 
   for (const [key, e] of Object.entries(S.lib)) {
     if (st.type !== 'all' && e._type !== st.type) continue;
@@ -629,25 +628,30 @@ function render() {
     groups[a.bucket].push(a);
   }
 
+  /* L'ordinamento scelto vale per TUTTE le sezioni, non solo per la prima:
+     prima cambiava il menù e sotto non si muoveva niente. */
   sortList(groups.watch, st.sort);
-  groups.soon.sort((x, y) => (x.upcomingAt || Infinity) - (y.upcomingAt || Infinity));
-  sortList(groups.waiting, 'lastwatch');
-  sortList(groups.paused, 'lastwatch');
-  groups.start.sort((x, y) => titolo(x.key, x.e).localeCompare(titolo(y.key, y.e)));
-  sortList(groups.archive, 'lastwatch');
+  sortList(groups.paused, st.sort);
+  sortList(groups.start, st.sort);
+  sortList(groups.archive, st.sort);
+
+  // In pari: chi ha una data prima, dalla più vicina; chi non ce l'ha in fondo.
+  if (st.sort === 'recent') {
+    groups.pari.sort((x, y) => (x.upcomingAt || Infinity) - (y.upcomingAt || Infinity));
+  } else {
+    sortList(groups.pari, st.sort);
+  }
 
   paintWatch(groups.watch);
-  paint('gridSoon', groups.soon, 'cSoon', true);
+  paint('gridPari', groups.pari, 'cPari', true);
   const nuove = paintNuove();
-  paint('gridWaiting', groups.waiting, 'cWaiting', true);
   paint('gridPaused', groups.paused, 'cPaused', true);
   paint('gridStart', groups.start, 'cStart', true);
-  paint('gridArchive', groups.archive, 'cArchive', true);
+  paintArchivio(groups.archive);
 
   const conteggi = {
-    watch: groups.watch.length, soon: groups.soon.length, nuove,
-    waiting: groups.waiting.length, paused: groups.paused.length,
-    start: groups.start.length, archive: groups.archive.length
+    watch: groups.watch.length, pari: groups.pari.length, nuove,
+    paused: groups.paused.length, start: groups.start.length, archive: groups.archive.length
   };
   aggiornaMenu(conteggi, groups.watch);
 
@@ -655,7 +659,7 @@ function render() {
   const v = S.settings.vista || 'tutto';
   const pieno = v === 'tutto';
   const sezioni = {
-    watch: '#secWatch', soon: '#secSoon', nuove: '#secNuove', waiting: '#secWaiting',
+    watch: '#secWatch', pari: '#secPari', nuove: '#secNuove',
     paused: '#secPaused', start: '#secStart', archive: '#secArchive'
   };
   for (const [chiave, sel] of Object.entries(sezioni)) {
@@ -668,9 +672,8 @@ function render() {
   show('#emptyWatch', (pieno || v === 'watch') && groups.watch.length === 0);
 
   const VUOTE = {
-    soon: 'Nessuna serie con una data già fissata.',
+    pari: 'Nessuna serie in pari.',
     nuove: 'Nessuna stagione nuova in uscita fra quelle che segui.',
-    waiting: 'Nessuna serie in attesa di una data.',
     paused: 'Niente in pausa: non hai serie lasciate a metà.',
     start: 'Niente da iniziare.',
     archive: "L'archivio è vuoto."
@@ -757,6 +760,50 @@ function splitBands(list) {
     { label: 'Appena usciti', items: b[0] },
     { label: 'Più indietro', items: b[1] }
   ];
+}
+
+/* L'archivio è il cassone più grande: dentro ci sono cose molto diverse.
+   Le divido per motivo, come la schermata principale è divisa per fasce. */
+function paintArchivio(list) {
+  const finite = [], mollate = [], altro = [];
+  for (const a of list) {
+    if (a.e.status === 'completed') finite.push(a);
+    else if (a.e.status === 'dropped') mollate.push(a);
+    else altro.push(a);
+  }
+  paintABande('archivioBande', 'cArchive', list.length, [
+    { label: 'Finite', items: finite, nota: 'Le hai viste tutte e la serie è conclusa.' },
+    { label: 'Abbandonate', items: mollate, nota: 'Le hai messe fra le "dropped" su Simkl.' },
+    { label: 'Altro', items: altro, nota: null }
+  ]);
+}
+
+/* Disegna una lista divisa in fasce, con l'intestazione di ognuna. */
+function paintABande(hostId, countId, totale, fasce) {
+  const host = document.getElementById(hostId);
+  if (!host) return;
+  if (countId) $('#' + countId).textContent = totale;
+  host.replaceChildren();
+
+  const frag = document.createDocumentFragment();
+  for (const b of fasce) {
+    if (!b.items.length) continue;
+    const h = document.createElement('h3');
+    h.className = 'band-title';
+    h.appendChild(document.createTextNode(b.label));
+    const n = document.createElement('span');
+    n.className = 'band-n';
+    n.textContent = b.items.length;
+    h.appendChild(n);
+    if (b.nota) h.title = b.nota;
+    frag.appendChild(h);
+
+    const g = document.createElement('div');
+    g.className = 'grid grid-sm';
+    for (const a of b.items) g.appendChild(card(a, true));
+    frag.appendChild(g);
+  }
+  host.appendChild(frag);
 }
 
 /* Le stagioni nuove segnalate dal calendario: non sono voci della libreria,
@@ -883,7 +930,11 @@ function card(a, small) {
     poster.appendChild(badge(fresco ? 'badge-new' : 'badge-count', fresco ? 'NUOVO' : '+1'));
   }
   if (a.back) poster.appendChild(badge('badge-back', 'TORNATA'));
-  else if (a.bucket === 'soon' && a.upcomingAt) poster.appendChild(badge('badge-soon', when(a.upcomingAt)));
+  else if (a.bucket === 'pari') {
+    // Hai visto tutto quello che è uscito: si deve vedere a colpo d'occhio.
+    if (a.upcomingAt) poster.appendChild(badge('badge-soon', when(a.upcomingAt)));
+    else poster.appendChild(badge('badge-done', '✓'));
+  }
   if (e._type === 'anime') poster.appendChild(badge('badge-type', 'ANIME'));
 
   // pulsantino per spostare a mano una serie tra "da guardare" e "in pausa"
@@ -914,24 +965,25 @@ function card(a, small) {
   const sub = document.createElement('div');
   sub.className = 'sub';
 
-  let lbl, date;
-  if (a.bucket === 'waiting') {
-    // Sei in pari: la cosa utile è fin dove sei arrivato, non un episodio da vedere.
-    lbl = e.last_watched ? 'visto fino a ' + e.last_watched : 'sei in pari';
-    date = a.lastAt;
+  /* Se hai visto tutti gli episodi usciti la parola giusta è "Completo".
+     Scrivere "visto fino a S02E10" faceva sembrare che fossi rimasto indietro. */
+  if (a.bucket === 'pari' && !a.upcomingAt) {
+    sub.innerHTML = '<b class="fatto">Completo</b>';
+  } else if (a.bucket === 'pari') {
+    const lbl = nextLabel(a);
+    sub.innerHTML = lbl
+      ? `<b>${escapeHtml(lbl)}</b> ${escapeHtml('esce ' + when(a.upcomingAt))}`
+      : 'Esce ' + when(a.upcomingAt);
   } else {
-    lbl = nextLabel(a);
+    let lbl = nextLabel(a);
     // Sulle serie completate o abbandonate Simkl non dà il "prossimo episodio":
     // in quel caso dico almeno quanta roba nuova c'è.
     if (!lbl && a.backlog > 0) lbl = a.backlog === 1 ? '1 episodio nuovo' : a.backlog + ' episodi nuovi';
-    date = a.bucket === 'soon' ? a.upcomingAt : a.airedAt;
+    if (lbl && a.airedAt) sub.innerHTML = `<b>${escapeHtml(lbl)}</b> ${escapeHtml('uscito ' + when(a.airedAt))}`;
+    else if (lbl) sub.textContent = lbl;
+    else if (a.airedAt) sub.textContent = 'uscito ' + when(a.airedAt);
+    else sub.textContent = show_.year ? String(show_.year) : '';
   }
-  // "uscito" / "esce" evita il dubbio fra quando è uscito l'episodio e quando l'hai visto tu
-  const verbo = a.bucket === 'soon' ? 'esce ' : (a.bucket === 'waiting' ? '' : 'uscito ');
-  if (lbl && date) sub.innerHTML = `<b>${escapeHtml(lbl)}</b> ${escapeHtml(verbo + when(date))}`;
-  else if (lbl) sub.textContent = lbl;
-  else if (date) sub.textContent = when(date);
-  else sub.textContent = show_.year ? String(show_.year) : '';
   meta.appendChild(sub);
 
   /* Il titolo dell'episodio, solo nella griglia grande dove c'è spazio.
@@ -954,6 +1006,7 @@ const SPIEGA_PASTIGLIA = {
   'badge-new': 'Un episodio solo, uscito negli ultimi 7 giorni',
   'badge-back': 'Era ferma da un pezzo, ma è uscita roba nuova',
   'badge-soon': 'Quando esce il prossimo episodio',
+  'badge-done': 'Hai visto tutti gli episodi usciti finora',
   'badge-type': 'È un anime'
 };
 
@@ -972,7 +1025,7 @@ const FASCE_NAV = ['Appena usciti', 'Più indietro'];
 
 function aggiornaMenu(conteggi, watch) {
   for (const [chiave, id] of Object.entries({
-    watch: 'nWatch', soon: 'nSoon', nuove: 'nNuove', waiting: 'nWaiting',
+    watch: 'nWatch', pari: 'nPari', nuove: 'nNuove',
     paused: 'nPaused', start: 'nStart', archive: 'nArchive'
   })) {
     const el = document.getElementById(id);

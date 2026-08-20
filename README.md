@@ -44,12 +44,11 @@ servire i file vecchi mentre lavori.
 | Sezione | Cosa contiene |
 |---|---|
 | **Da guardare ora** | Episodi usciti e non ancora visti. È la schermata principale. |
-| **In arrivo** | Sei in pari e c'è già una data per il prossimo episodio. |
-| **Stagioni nuove che non hai** | Stanno uscendo, sembrano seguiti di roba che segui, ma su Simkl non ce le hai. |
-| **In attesa** | Sei in pari, ma la data non è ancora stata annunciata. |
+| **In pari** | Hai visto tutti gli episodi usciti. Dove si sa, c'è la data del prossimo. |
+| **Stagioni nuove** | Stanno uscendo, sembrano seguiti di roba che segui, ma su Simkl non ce le hai. |
 | **In pausa** | Hanno arretrati, ma sei fermo da troppo tempo. |
 | **Da iniziare** | Il tuo "Plan to watch", più le serie che hai in lista ma non hai mai aperto. |
-| **Archivio** | Completate e abbandonate senza novità. |
+| **Archivio** | Niente di nuovo in vista. Diviso in *Finite* e *Abbandonate*. |
 
 Tutte tranne la prima sono chiuse: si aprono con un clic sul titolo, e restano
 come le lasci anche dopo aver ricaricato.
@@ -58,6 +57,14 @@ come le lasci anche dopo aver ricaricato.
 
 Sotto al titolo c'è il dato che riassume tutto: **quanti episodi ti aspettano, su
 quante serie**, e quanti sono appena usciti. È la riga da leggere aprendo la pagina.
+
+### Ordinamento e filtri
+
+L'ordinamento scelto vale per **tutte** le sezioni, non solo per la prima: cambiando
+"Ordina" si riordina anche l'Archivio, la Pausa e il resto.
+
+In *In pari* l'ordine predefinito mette davanti le serie con una data, dalla più
+vicina; quelle senza data vanno in fondo.
 
 ### Scorciatoie
 
@@ -108,6 +115,7 @@ griglia torna unica.
 
 | Pastiglia | Vuol dire |
 |---|---|
+| **✓** (verde) | hai visto tutti gli episodi usciti finora |
 | **NUOVO** (blu) | un episodio solo, uscito negli ultimi 7 giorni |
 | **+7** (rosso) | quanti episodi hai arretrati |
 | **TORNATA** (verde) | era ferma, ma è uscita roba nuova |
@@ -141,11 +149,14 @@ Poi decide dove metterlo:
 - arretrati ≥ 1, sei fermo da un pezzo, ma **la serie è ancora calda** → **Da guardare ora**
 - arretrati ≥ 1, sei fermo da un pezzo e la serie è fredda → **In pausa**
 - ...a meno che non ci sia un segnale recente → **Da guardare ora** con badge TORNATA
-- zero arretrati e una data nota → **In arrivo**
-- zero arretrati e nessuna data → **In attesa**
+- zero arretrati → **In pari**, con la data del prossimo episodio se si sa
 - abbandonata e senza novità → **Archivio**, sempre
 
 Con zero arretrati non finisce **mai** in pausa: non c'è niente da recuperare.
+
+Quando hai visto tutti gli episodi usciti, sotto al poster c'è scritto **Completo**
+e sulla copertina compare una spunta verde. Prima diceva "visto fino a S02E10", che
+faceva sembrare che fossi rimasto indietro.
 E una serie che hai abbandonato non compare mai tra quelle in attesa o in arrivo:
 non stai aspettando niente.
 

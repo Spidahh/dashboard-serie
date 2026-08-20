@@ -8,7 +8,7 @@
 <link rel="icon" href="icon.svg">
 <link rel="manifest" href="manifest.webmanifest">
 <!-- il numero di versione sale a ogni modifica: senza, il browser continua a servire i file vecchi -->
-<link rel="stylesheet" href="app.css?v=9">
+<link rel="stylesheet" href="app.css?v=11">
 </head>
 <body>
 
@@ -84,9 +84,8 @@
      <button class="nav-item on" data-vista="tutto" title="Mostra tutte le categorie una sotto l'altra">Tutte le categorie</button>
      <button class="nav-item" data-vista="watch" title="Episodi già usciti che non hai ancora visto">Da guardare ora <span class="nav-n" id="nWatch">0</span></button>
      <div class="nav-fasce" id="navFasce"></div>
-     <button class="nav-item" data-vista="soon" title="Sei in pari, e la data del prossimo episodio si sa già">In arrivo <span class="nav-n" id="nSoon">0</span></button>
+     <button class="nav-item" data-vista="pari" title="Hai visto tutti gli episodi usciti">In pari <span class="nav-n" id="nPari">0</span></button>
      <button class="nav-item" data-vista="nuove" title="Stagioni nuove che stanno uscendo ma non hai su Simkl">Stagioni nuove <span class="nav-n" id="nNuove">0</span></button>
-     <button class="nav-item" data-vista="waiting" title="Sei in pari, ma la data del prossimo episodio non si sa ancora">In attesa <span class="nav-n" id="nWaiting">0</span></button>
      <button class="nav-item" data-vista="paused" title="Hanno arretrati, ma sei fermo da troppo tempo">In pausa <span class="nav-n" id="nPaused">0</span></button>
      <button class="nav-item" data-vista="start" title="Nella lista, ma non le hai mai aperte">Da iniziare <span class="nav-n" id="nStart">0</span></button>
      <button class="nav-item" data-vista="archive" title="Finite o abbandonate, senza novità">Archivio <span class="nav-n" id="nArchive">0</span></button>
@@ -101,11 +100,11 @@
       <p id="emptyWatch" class="empty hidden">Sei in pari: non c'è niente da recuperare.</p>
     </section>
 
-    <!-- IN ARRIVO -->
-    <section class="block collapsible" id="secSoon">
-      <h2 class="block-title toggle" data-target="gridSoon">In arrivo <span class="count" id="cSoon">0</span><span class="caret">&#9662;</span></h2>
-      <p class="hint">Sei in pari, e la data del prossimo episodio si sa già.</p>
-      <div id="gridSoon" class="grid grid-sm"></div>
+    <!-- IN PARI -->
+    <section class="block collapsible" id="secPari">
+      <h2 class="block-title toggle">In pari <span class="count" id="cPari">0</span><span class="caret">&#9662;</span></h2>
+      <p class="hint">Hai visto tutti gli episodi usciti. Dove la data del prossimo si sa già, è scritta sul poster; dove non si sa ancora, c'è la spunta.</p>
+      <div id="gridPari" class="grid grid-sm"></div>
     </section>
 
     <!-- STAGIONI NUOVE NON IN LIBRERIA -->
@@ -113,13 +112,6 @@
       <h2 class="block-title toggle" data-target="gridNuove">Stagioni nuove <span class="count" id="cNuove">0</span><span class="caret">&#9662;</span></h2>
       <p class="hint">Stanno uscendo adesso e sembrano il seguito di qualcosa che segui, ma su Simkl non le hai in lista. Aggiungile lì ed entrano qui da sole. Se l'accostamento è sbagliato, usa <b>nascondi</b> sul poster.</p>
       <div id="gridNuove" class="grid grid-sm"></div>
-    </section>
-
-    <!-- IN ATTESA -->
-    <section class="block collapsible closed" id="secWaiting">
-      <h2 class="block-title toggle" data-target="gridWaiting">In attesa <span class="count" id="cWaiting">0</span><span class="caret">&#9662;</span></h2>
-      <p class="hint">Sei in pari, ma la data del prossimo episodio non è ancora stata annunciata. Quando esce, si spostano da sole in <b>In arrivo</b>.</p>
-      <div id="gridWaiting" class="grid grid-sm"></div>
     </section>
 
     <!-- IN PAUSA -->
@@ -139,8 +131,8 @@
     <!-- ARCHIVIO -->
     <section class="block collapsible closed" id="secArchive">
       <h2 class="block-title toggle" data-target="gridArchive">Archivio <span class="count" id="cArchive">0</span><span class="caret">&#9662;</span></h2>
-      <p class="hint">Finite o abbandonate, senza niente di nuovo. Se una torna con episodi nuovi, la ritrovi in <b>Da guardare ora</b> con la pastiglia TORNATA.</p>
-      <div id="gridArchive" class="grid grid-sm"></div>
+      <p class="hint">Niente di nuovo in vista. Se una torna con episodi nuovi, la ritrovi in <b>Da guardare ora</b> con la pastiglia TORNATA.</p>
+      <div id="archivioBande"></div>
     </section>
 
     <p id="emptyVista" class="empty hidden"></p>
@@ -207,6 +199,6 @@
   </div>
 </div>
 
-<script src="app.js?v=9"></script>
+<script src="app.js?v=11"></script>
 </body>
 </html>
