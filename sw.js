@@ -1,9 +1,17 @@
 /* Service worker: tiene la pagina apribile anche senza rete.
    I dati arrivano sempre dalla rete o dalla memoria del browser, mai da qui. */
 
-const CACHE = 'dashboard-serie-v16';
+/* UNICO posto dove il numero di versione compare in questo file: da qui escono
+   sia il nome della cache sia gli indirizzi dello shell.
+   Va tenuto uguale al ?v= di index.html e guida.html. Se qualcuno se ne dimentica
+   uno, app.js se ne accorge da solo e lo scrive nella console. */
+const VERSIONE = '17';
+
+const CACHE = 'dashboard-serie-v' + VERSIONE;
 // gli stessi indirizzi che chiede la pagina, numero di versione compreso
-const SHELL = ['./', './index.html', './guida.html', './app.css?v=16', './app.js?v=16', './icon.svg', './manifest.webmanifest'];
+const SHELL = ['./', './index.html', './guida.html',
+               `./app.css?v=${VERSIONE}`, `./app.js?v=${VERSIONE}`,
+               './icon.svg', './manifest.webmanifest'];
 
 self.addEventListener('install', ev => {
   ev.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -35,6 +43,9 @@ self.addEventListener('fetch', ev => {
         caches.open(CACHE).then(c => c.put(req, copy));
         return res;
       })
-      .catch(() => caches.match(req).then(hit => hit || caches.match('./index.html', './guida.html')))
+      /* caches.match(richiesta, opzioni): il secondo argomento sono le opzioni,
+         non un secondo indirizzo. guida.html sta gia' nello shell, quindi la
+         trova la riga qui sopra; l'ultimo ripiego e' la pagina principale. */
+      .catch(() => caches.match(req).then(hit => hit || caches.match('./index.html')))
   );
 });

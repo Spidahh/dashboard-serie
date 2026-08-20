@@ -41,7 +41,13 @@ servire i file vecchi mentre lavori.
 
 ## Da dove arrivano i dati
 
-**Simkl** è la sorgente principale: serie TV, anime e film, col tracciamento automatico.
+**Stato oggi:** l'unica sorgente accesa è **Simkl**. AniList e Trakt sono scritti e
+funzionanti, ma spenti: in `app.js` mancano i loro `client_id`, e finché mancano il
+pulsante non compare nemmeno. Le istruzioni per accenderli sono qui sotto.
+
+**Simkl** è la sorgente principale: serie TV e anime, col tracciamento automatico.
+I film restano fuori: la dashboard legge solo le liste `shows` e `anime`, e nessuna
+sezione li conta.
 
 **AniList** si può collegare come seconda sorgente, e copre i soli anime. Entra senza
 bisogno di un server perché il suo login non richiede nessun segreto: AniList rimanda
@@ -55,7 +61,7 @@ Per attivarlo serve un `client_id` di AniList, da creare su
 [anilist.co/settings/developer](https://anilist.co/settings/developer) mettendo come
 indirizzo di ritorno quello del sito. Finché manca, il pulsante non compare.
 
-**Trakt** copre serie TV e film. È l'unica sorgente che ha bisogno di un pezzetto di
+**Trakt** copre le serie TV. È l'unica sorgente che ha bisogno di un pezzetto di
 server, perché consegna il token solo dietro un segreto. Il file
 [`worker/trakt-token.js`](worker/trakt-token.js) è quel pezzetto: venti righe su
 Cloudflare che fanno *solo* lo scambio del token. Tutte le altre chiamate partono dal
@@ -101,8 +107,9 @@ variabile cifrata.
 | **Da iniziare** | Il tuo "Plan to watch", più le serie che hai in lista ma non hai mai aperto. |
 | **Archivio** | Niente di nuovo in vista. Diviso in *Finite* e *Abbandonate*. |
 
-Tutte tranne la prima sono chiuse: si aprono con un clic sul titolo, e restano
-come le lasci anche dopo aver ricaricato.
+Al primo avvio *Da guardare ora*, *In pari* e *Da scoprire* sono aperte; *In pausa*,
+*Da iniziare* e *Archivio* sono chiuse. Si aprono e si chiudono con un clic sul
+titolo, e restano come le lasci anche dopo aver ricaricato.
 
 ### La riga in testata
 
@@ -138,7 +145,7 @@ che compare passandoci sopra il mouse.
 
 Ogni voce porta il suo conteggio. Cliccandola **la pagina mostra solo quella
 sezione**, già aperta: è il modo rapido per andare in Archivio o in Pausa senza
-scorrere. "Tutto" rimette a posto tutto com'era.
+scorrere. "Tutte le categorie" rimette a posto tutto com'era.
 
 Sotto "Da guardare ora" compaiono le due fasce (*Appena usciti*, *Più indietro*):
 quelle non filtrano, portano il punto giusto sotto gli occhi.
@@ -150,7 +157,7 @@ Su schermi stretti il menù diventa una barra orizzontale sopra al contenuto.
 Due zone: il menù stretto a sinistra, il contenuto a destra che si prende tutto il
 resto dello spazio.
 
-Con **Tutto** selezionato il riquadro grande contiene tutte le categorie, una sotto
+Con **Tutte le categorie** selezionato il riquadro grande contiene tutte le categorie, una sotto
 l'altra, ognuna col suo titolo apribile. Cliccando una singola voce del menù, a
 destra resta **solo quella schermata**.
 
@@ -178,6 +185,7 @@ griglia torna unica.
 | **+7** (rosso) | quanti episodi hai arretrati |
 | **TORNATA** (verde) | era ferma, ma è uscita roba nuova |
 | **tra 3 giorni** | quando esce il prossimo |
+| **ANIME** | è un anime (in basso a sinistra; sul telefono non compare) |
 
 ### Il badge TORNATA
 
@@ -276,7 +284,7 @@ restano indietro, e su una serie da mille episodi basta poco per far comparire
 roba che hai già visto. Quando Simkl dice che non c'è un prossimo episodio, la
 dashboard crede a quello e non alla sottrazione.
 
-### Le tre soglie, e perché sono tre
+### Le quattro soglie, e perché sono quattro
 
 Sono cose diverse e vanno tenute separate.
 
@@ -285,6 +293,7 @@ Sono cose diverse e vanno tenute separate.
 | **Pausa** | da quanto non guardi **tu** | 60 giorni |
 | **Calda** | da quanto la **serie** non manda in onda niente | 90 giorni |
 | **Abbandono** | oltre questo l'hai mollata, in onda o no | 365 giorni |
+| **Tornata** | quanto dev'essere fresca la novità per farla risalire | 45 giorni |
 
 Il caso che ha reso necessaria la seconda soglia — due serie che sei fermo da
 tre mesi su entrambe:
@@ -308,7 +317,9 @@ soglia di abbandono ci vuole un episodio davvero nuovo per tornare su.
 scheda della singola serie (`/tv/{id}` o `/anime/{id}`), che pesa 3,5 KB e contiene
 `status` e `last_aired`.
 
-La dashboard le scarica a 5 richieste al secondo, metà del limite consentito, dando
+La dashboard le scarica a 3 richieste al secondo, meno di un terzo del limite
+consentito — il limite vale per `client_id`, non per persona, quindi se il sito lo
+usano in tanti i primi avvii si sommano — dando
 la precedenza ai titoli con arretrati — gli unici dove la scheda cambia una
 decisione. Poi tiene tutto in cache: 60 giorni per le serie concluse, 3 giorni per
 quelle ancora in onda. Il grosso succede una volta sola; dopo è istantaneo.
@@ -394,11 +405,18 @@ Se è irraggiungibile compare il titolo al posto della copertina.
 | File | Cosa fa |
 |---|---|
 | `index.html` | struttura della pagina |
-| `app.css` | aspetto |
+| `guida.html` | la guida per chi parte da zero |
+| `app.css` | aspetto, per tutte e due le pagine |
 | `app.js` | tutta la logica: login, sincronizzazione, regole, disegno |
 | `sw.js` | fa aprire la pagina anche senza rete |
 | `manifest.webmanifest` | serve per installarla come app |
+| `icon.svg` | l'icona, unica per sito e app |
 | `avvia.cmd` | avvia il server locale |
+| `worker/trakt-token.js` | il Cloudflare Worker di Trakt, l'unico pezzo di server |
+
+Il numero di versione negli indirizzi (`?v=`) sta in tre posti: `index.html`,
+`guida.html` e la costante `VERSIONE` di `sw.js`. Vanno tenuti uguali; se uno resta
+indietro, `app.js` lo scrive nella console del browser invece di lasciarti indovinare.
 
 Niente librerie esterne, niente compilazione, niente server tuo, nessun costo.
 I dati stanno solo nel browser (`localStorage`).
@@ -407,7 +425,10 @@ I dati stanno solo nel browser (`localStorage`).
 
 ## Dati tecnici
 
-- Endpoint usati: `/oauth/pin`, `/sync/activities`, `/sync/all-items`,
-  e i file pubblici `data.simkl.in/calendar/*.json`
+- Endpoint Simkl usati: `/oauth/pin` e `/oauth/pin/{codice}` per il collegamento;
+  `/sync/activities` e `/sync/all-items` per la libreria; `/tv/{id}` e `/anime/{id}`
+  per la scheda della singola serie (stato, ultima uscita, titolo inglese, consigli);
+  `/tv/premieres/new` e `/anime/premieres/new` per le novità; e i file pubblici
+  `data.simkl.in/calendar/*.json`, che non consumano quota
 - Autenticazione: OAuth 2.0, flusso PIN. Il `client_secret` non serve e non è nel codice.
 - Il `client_id` è in `app.js`. Non è un segreto: viaggia in ogni URL dell'API.

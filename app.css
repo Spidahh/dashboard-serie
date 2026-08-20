@@ -326,8 +326,10 @@ main { min-width: 0; }
 }
 .caret { transition: transform .18s; }
 .collapsible.closed .caret { transform: rotate(-90deg); }
-.collapsible.closed .grid,
-.collapsible.closed .hint { display: none; }
+/* Chiusa vuol dire chiusa: sparisce tutto tranne il titolo su cui si clicca.
+   Elencare a mano le classi da nascondere lasciava fuori i titoli delle fasce:
+   Archivio chiuso mostrava "Finite" e "Abbandonate" con sotto il vuoto. */
+.collapsible.closed > *:not(.block-title) { display: none; }
 
 /* Quando un filtro è acceso deve vedersi: altrimenti i numeri nel menù
    cambiano e sembra che si sia rotto qualcosa. */
@@ -374,7 +376,16 @@ main { min-width: 0; }
 }
 .grid-sm { grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); gap: 18px 12px; }
 
-.card { position: relative; display: block; color: inherit; text-decoration: none; }
+.card { position: relative; display: block; color: inherit; }
+
+/* Il collegamento alla scheda e' un velo trasparente steso sopra al poster, non
+   un <a> che avvolge tutta la card: un <button> dentro un <a> non e' HTML valido
+   e da tastiera il pulsante restava impigliato dentro al collegamento.
+   Pastiglie e pulsanti stanno un piano piu' in alto del velo, quindi si cliccano.
+   Stanno tutti dentro .poster, cosi' l'ordine regge anche quando .poster si
+   solleva al passaggio del mouse e diventa un contesto a se'. */
+.poster-link { position: absolute; inset: 0; z-index: 1; }
+.title a { color: inherit; text-decoration: none; }
 
 .poster {
   position: relative;
@@ -401,6 +412,7 @@ main { min-width: 0; }
 /* pastiglie sopra al poster */
 .badge {
   position: absolute;
+  z-index: 2;
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
@@ -464,6 +476,7 @@ main { min-width: 0; }
 /* azione rapida sulla card */
 .card-act {
   position: absolute;
+  z-index: 2;
   right: 6px;
   bottom: 6px;
   font-size: 11px;

@@ -95,12 +95,31 @@ function load() {
 function save() {
   try {
     localStorage.setItem(CFG.storeKey, JSON.stringify(S));
+    return;
   } catch (e) {
-    // se lo spazio finisce, la cache del calendario è la prima cosa sacrificabile
-    console.warn('Spazio locale esaurito, svuoto la cache del calendario.', e);
-    S.cal = {}; S.calAt = 0;
-    try { localStorage.setItem(CFG.storeKey, JSON.stringify(S)); } catch (_) {}
+    console.warn('Spazio locale esaurito, butto via a partire dal meno importante.', e);
   }
+
+  /* In ordine di sacrificabilità. I consigli si rifanno da soli una volta a
+     settimana, il calendario ogni 5 ore: buttarli non costa niente. Le schede
+     costano una chiamata a testa e sono l'ultima cosa da mollare. La libreria
+     non si tocca mai: senza quella la pagina è vuota.
+     Prima sacrificavo solo il calendario, che però è la parte piccola: su una
+     libreria da mille titoli il peso vero sono le schede. */
+  const sacrifici = [
+    ['consigli',   () => { S.simili = []; S.novita = []; S.nuove = []; S.consigliAt = 0; }],
+    ['calendario', () => { S.cal = {}; S.calAt = 0; }],
+    ['schede',     () => { S.det = {}; }]
+  ];
+  for (const [cosa, butta] of sacrifici) {
+    butta();
+    try {
+      localStorage.setItem(CFG.storeKey, JSON.stringify(S));
+      console.warn('Salvato dopo aver svuotato:', cosa);
+      return;
+    } catch (_) { /* non basta ancora */ }
+  }
+  console.warn('Non riesco a salvare nemmeno la sola libreria: lo spazio del browser è pieno.');
 }
 
 /* ---------------- chiamate API ---------------- */
@@ -381,6 +400,9 @@ async function refreshCalendar({ force = false } = {}) {
   const mie = new Set(Object.values(S.lib).filter(e => !e._fonte).map(e => String(e._id)));
   if (!mie.size) return;
 
+  // e quello che hai su AniList o Trakt, che ha id di un'altra numerazione
+  const gia = giaInLibreria();
+
   /* Le "radici" di quello che hai già. Ma una stagione nuova ha senso proporla
      solo se con quella serie sei in buoni rapporti: se ne hai mollata una a metà,
      consigliarti la successiva è inutile. */
@@ -423,6 +445,8 @@ async function refreshCalendar({ force = false } = {}) {
           }
           continue;
         }
+
+        if (gia.titoli.has(tipo + '|' + normalizza(x.title))) continue;   // ce l'hai su un altro servizio
 
         const r = radice(x.title);                      // non ce l'hai: è roba che segui?
         if (r.length < 5 || !radici.has(r)) continue;
@@ -582,14 +606,53 @@ function decodifica(txt) {
   return chiaro;
 }
 
-// Titolo ridotto all'osso, per riconoscere lo stesso anime arrivato da due servizi.
-function chiaveTitolo(key, e) {
-  return decodifica(titolo(key, e)).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+/* Titolo ridotto all'osso: niente maiuscole, niente punteggiatura. Serve a
+   riconoscere lo stesso titolo arrivato da due servizi diversi. Tenuto in memoria
+   perché render() lo ricalcola a ogni tasto premuto, su tutta la libreria. */
+const memoNorm = new Map();
+function normalizza(txt) {
+  if (!txt) return '';
+  const gia = memoNorm.get(txt);
+  if (gia !== undefined) return gia;
+  const n = decodifica(txt).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  memoNorm.set(txt, n);
+  return n;
 }
 
-// La ricerca deve funzionare sia col titolo inglese sia con quello romanizzato.
+/* Le forme sotto cui lo stesso titolo può presentarsi. Simkl manda il
+   romanizzato, AniList l'inglese, Trakt l'inglese: confrontare solo il nome che
+   sto mostrando faceva sfuggire i doppioni ogni volta che i due servizi avevano
+   scelto una lingua diversa. Il tipo entra nella chiave, perché un anime e una
+   serie TV che si chiamano uguale non sono la stessa cosa. */
+function chiaviTitolo(key, e) {
+  const out = [];
+  for (const forma of [S.det[key]?.enTitle, e.show?.title, e._altTitolo]) {
+    const n = normalizza(forma);
+    if (n) out.push(e._type + '|' + n);
+  }
+  return out;
+}
+
+/* Quello che hai già, per non proportelo come novità.
+   Gli id valgono solo per Simkl: quelli di AniList e Trakt sono numerazioni
+   diverse e possono coincidere per puro caso. Mescolarli faceva sparire consigli
+   buoni. Per le altre fonti il confronto giusto è sul titolo. */
+function giaInLibreria() {
+  const ids = new Set(), titoli = new Set();
+  for (const [k, e] of Object.entries(S.lib)) {
+    if (!e._fonte) ids.add(String(e._id));
+    for (const c of chiaviTitolo(k, e)) titoli.add(c);
+  }
+  return {
+    ids, titoli,
+    ha: (id, tipo, nome) => ids.has(String(id)) || titoli.has(tipo + '|' + normalizza(nome))
+  };
+}
+
+// La ricerca deve funzionare con tutti i nomi che un titolo ha: inglese e romanizzato.
 function cercabile(key, e) {
-  return (decodifica(S.det[key]?.enTitle) + ' ' + decodifica(e.show?.title)).toLowerCase();
+  return [S.det[key]?.enTitle, e.show?.title, e._altTitolo]
+    .map(decodifica).join(' ').toLowerCase();
 }
 
 /* ================================================================
@@ -731,6 +794,9 @@ function alAggiungi(v) {
     _fonte: 'anilist',
     _type: 'anime',
     _id: m.id,
+    // AniList mostra l'inglese, Simkl manda il romanizzato: tengo da parte anche
+    // quello, altrimenti lo stesso anime preso da tutti e due compare due volte.
+    _altTitolo: m.title?.romaji || null,
     status: AL_STATI[v.status] || 'watching',
     watched_episodes_count: visti,
     total_episodes_count: totali,
@@ -863,7 +929,7 @@ function tkScollega() {
   render();
 }
 
-async function syncTrakt() {
+async function syncTrakt({ giaRinnovato = false } = {}) {
   if (!tkCollegato()) return;
   if (S.tk.scade && Date.now() > S.tk.scade - DAY) await tkRinnova();
 
@@ -898,7 +964,9 @@ async function syncTrakt() {
 
   } catch (err) {
     if (err.message === 'TK_SCADUTO') {
-      if (await tkRinnova()) return syncTrakt();
+      /* Un solo tentativo di rinnovo. Se il token nuovo viene rifiutato di nuovo
+         non ha senso insistere: prima si richiamava all'infinito. */
+      if (!giaRinnovato && await tkRinnova()) return syncTrakt({ giaRinnovato: true });
       S.tk = { token: null, refresh: null, scade: 0 };
       save();
       toast('Il collegamento con Trakt è scaduto');
@@ -994,7 +1062,7 @@ function semiPerConsigli() {
 async function refreshConsigli({ force = false } = {}) {
   if (!force && Date.now() - (S.consigliAt || 0) < CONSIGLI_TTL && S.simili?.length) return;
 
-  const mie = new Set(Object.values(S.lib).map(e => String(e._id)));
+  const mie = giaInLibreria();
   const punteggi = new Map();
 
   for (const seme of semiPerConsigli()) {
@@ -1005,13 +1073,14 @@ async function refreshConsigli({ force = false } = {}) {
       for (const r of d?.users_recommendations || []) {
         if (presi >= 4) break;        // un titolo solo non deve riempire tutta la lista
         const id = r.ids?.simkl;
-        if (!id || mie.has(String(id))) continue;
+        const tipo = r.type === 'anime' ? 'anime' : 'shows';
+        if (!id || mie.ha(id, tipo, r.en_title || r.title)) continue;
         presi++;
         const perc = parseInt(String(r.users_percent || '0'), 10) || 0;
         const gia = punteggi.get(id);
         if (gia) { gia.punti += perc; gia.quante++; }
         else punteggi.set(id, {
-          id, tipo: r.type === 'anime' ? 'anime' : 'shows',
+          id, tipo,
           title: r.en_title || r.title, slug: r.ids?.slug || '',
           poster: r.poster || null, punti: perc, quante: 1,
           da: titolo(seme.k, seme.e), anno: r.year || null
@@ -1032,7 +1101,7 @@ async function refreshConsigli({ force = false } = {}) {
       const arr = await api(`/${percorso}/premieres/new`, {}, { auth: false });
       for (const x of arr || []) {
         const id = x.ids?.simkl_id ?? x.ids?.simkl;
-        if (!id || mie.has(String(id))) continue;
+        if (!id || mie.ha(id, tipo, x.title)) continue;
         const t = Date.parse(x.date);
         novita.push({ id, tipo, title: x.title, slug: x.ids?.slug || '',
                       poster: x.poster || null, t: isFinite(t) ? t : null, anno: x.year || null });
@@ -1159,17 +1228,20 @@ function render() {
 
   const groups = { watch: [], pari: [], paused: [], start: [], archive: [] };
 
-  /* Se hai collegato tutti e due i servizi, lo stesso anime può arrivare due volte.
-     Tengo quello di Simkl, che porta più dati, e salto il gemello di AniList. */
+  /* Se hai collegato più servizi, lo stesso titolo può arrivare due volte: Simkl
+     e AniList sugli anime, Simkl e Trakt sulle serie TV. Tengo quello di Simkl,
+     che porta più dati, e salto i gemelli.
+     Prima il controllo valeva solo per AniList e solo sugli anime: collegando
+     Trakt ogni serie TV che hai su tutti e due sarebbe comparsa doppia. */
   const daSimkl = new Set();
-  if (S.token && alCollegato()) {
+  if (S.token) {
     for (const [k, e] of Object.entries(S.lib)) {
-      if (e._fonte !== 'anilist' && e._type === 'anime') daSimkl.add(chiaveTitolo(k, e));
+      if (!e._fonte) for (const c of chiaviTitolo(k, e)) daSimkl.add(c);
     }
   }
 
   for (const [key, e] of Object.entries(S.lib)) {
-    if (e._fonte === 'anilist' && daSimkl.size && daSimkl.has(chiaveTitolo(key, e))) continue;
+    if (e._fonte && daSimkl.size && chiaviTitolo(key, e).some(c => daSimkl.has(c))) continue;
     if (st.type !== 'all' && e._type !== st.type) continue;
     if (q && !cercabile(key, e).includes(q)) continue;
     const a = analyse(key, e, now);
@@ -1401,12 +1473,10 @@ function paintConsigli() {
 function cardNuova(x) {
   const kind = x.tipo === 'anime' ? 'anime' : 'tv';
   const nome = decodifica(x.title);
+  const dove = `https://simkl.com/${kind}/${x.id}/${x.slug}`;
 
-  const el = document.createElement('a');
+  const el = document.createElement('div');
   el.className = 'card';
-  el.href = `https://simkl.com/${kind}/${x.id}/${x.slug}`;
-  el.target = '_blank';
-  el.rel = 'noopener';
   el.title = nome;
 
   const poster = document.createElement('div');
@@ -1422,14 +1492,14 @@ function cardNuova(x) {
     f.textContent = nome;
     poster.appendChild(f);
   }
+  poster.appendChild(veloLink(dove));
   if (x.t) poster.appendChild(badge('badge-soon', when(x.t)));
 
   const b = document.createElement('button');
   b.className = 'card-act';
   b.textContent = 'nascondi';
   b.title = 'Non segnalarmela più';
-  b.onclick = ev => {
-    ev.preventDefault(); ev.stopPropagation();
+  b.onclick = () => {
     S.nascoste[x.id] = true;
     save(); render();
   };
@@ -1439,7 +1509,7 @@ function cardNuova(x) {
   meta.className = 'meta';
   const t = document.createElement('div');
   t.className = 'title';
-  t.textContent = nome;
+  t.appendChild(linkTitolo(dove, nome));
   meta.appendChild(t);
   const sub = document.createElement('div');
   sub.className = 'sub';
@@ -1475,14 +1545,11 @@ function card(a, small) {
   const e = a.e;
   const show_ = e.show || {};
   const slug = show_.ids?.slug || '';
-  const kind = e._type === 'anime' ? 'anime' : 'tv';
-
-  const el = document.createElement('a');
-  el.className = 'card';
-  el.href = linkScheda(e, slug);
-  el.target = '_blank';
-  el.rel = 'noopener';
   const nome = titolo(a.key, e);
+  const dove = linkScheda(e, slug);
+
+  const el = document.createElement('div');
+  el.className = 'card';
   el.title = nome;
 
   const poster = document.createElement('div');
@@ -1501,6 +1568,7 @@ function card(a, small) {
     f.textContent = nome;
     poster.appendChild(f);
   }
+  poster.appendChild(veloLink(dove));
 
   // Un episodio solo e appena uscito è una cosa diversa da sette arretrati.
   if (a.backlog >= 2) {
@@ -1525,8 +1593,7 @@ function card(a, small) {
     b.title = a.bucket === 'watch'
       ? 'Togli questa serie dalla schermata principale. Vale solo qui: su Simkl non cambia niente.'
       : 'Rimettila fra quelle da guardare. Vale solo qui: su Simkl non cambia niente.';
-    b.onclick = ev => {
-      ev.preventDefault(); ev.stopPropagation();
+    b.onclick = () => {
       const m = S.meta[a.key] || (S.meta[a.key] = {});
       m.override = a.bucket === 'watch' ? 'paused' : 'watch';
       save(); render();
@@ -1539,7 +1606,7 @@ function card(a, small) {
 
   const t = document.createElement('div');
   t.className = 'title';
-  t.textContent = nome;
+  t.appendChild(linkTitolo(dove, nome));
   meta.appendChild(t);
 
   const sub = document.createElement('div');
@@ -1595,6 +1662,31 @@ function posterUrl(poster, piccolo) {
   if (!poster) return '';
   if (/^https?:\/\//.test(poster)) return poster;
   return `${CFG.img}${poster}${piccolo ? '_ca' : '_m'}.webp&q=90`;
+}
+
+/* Il poster è coperto da un velo trasparente che porta alla scheda, e il titolo
+   ha il suo collegamento vero. Prima la card intera era un <a> con dentro un
+   <button>: HTML non valido, e da tastiera il pulsante finiva dentro al link.
+   Il velo è tolto dal giro della tastiera e nascosto agli screen reader, così lo
+   stesso titolo non viene annunciato due volte. */
+function veloLink(href) {
+  const a = document.createElement('a');
+  a.className = 'poster-link';
+  a.href = href;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.tabIndex = -1;
+  a.setAttribute('aria-hidden', 'true');
+  return a;
+}
+
+function linkTitolo(href, nome) {
+  const a = document.createElement('a');
+  a.href = href;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.textContent = nome;
+  return a;
 }
 
 function linkScheda(e, slug) {
@@ -1830,16 +1922,21 @@ function logout(msg) {
 }
 
 // Le sezioni restano come le hai lasciate l'ultima volta.
+/* Gli id sono quelli veri di index.html. Prima qui c'erano secSoon e secWaiting,
+   sezioni sparite da qualche versione, e mancava secPari: il risultato era che
+   per metà delle sezioni questa tabella non decideva niente. */
 const APERTE_INIZIALI = {
-  secSoon: true, secNuove: true,
-  secWaiting: false, secPaused: false, secStart: false, secArchive: false
+  secPari: true, secNuove: true,
+  secPaused: false, secStart: false, secArchive: false
 };
 
 function applicaSezioni() {
-  const scelte = S.settings.aperte || APERTE_INIZIALI;
+  const scelte = S.settings.aperte || {};
   for (const sez of document.querySelectorAll('.collapsible')) {
-    if (scelte[sez.id] === undefined) continue;
-    sez.classList.toggle('closed', !scelte[sez.id]);
+    // le tue scelte vincono; per le sezioni che non hai mai toccato vale il default
+    const aperta = scelte[sez.id] !== undefined ? scelte[sez.id] : APERTE_INIZIALI[sez.id];
+    if (aperta === undefined) continue;
+    sez.classList.toggle('closed', !aperta);
   }
 }
 
@@ -1962,6 +2059,18 @@ function exportSettings() {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
+/* Il numero di versione negli indirizzi (?v=) vive in tre file: index.html,
+   guida.html e sw.js. Aggiornarne uno solo fa girare il CSS nuovo insieme al JS
+   vecchio, e i sintomi non somigliano alla causa. Qui me ne accorgo e lo dico. */
+function controllaVersioni() {
+  const ver = url => { try { return new URL(url, location.href).searchParams.get('v') || ''; } catch (_) { return ''; } };
+  const js = [...document.scripts].map(s => s.src).find(s => s.includes('app.js'));
+  const css = [...document.querySelectorAll('link[rel=stylesheet]')].map(l => l.href).find(h => h.includes('app.css'));
+  if (!js || !css || ver(js) === ver(css)) return;
+  console.warn(`Dashboard Serie: versioni disallineate — app.js?v=${ver(js)} contro app.css?v=${ver(css)}. ` +
+               'Il numero va tenuto uguale in index.html, guida.html e sw.js.');
+}
+
 const collegato = () => !!S.token || alCollegato() || tkCollegato();
 
 async function boot() {
@@ -1990,6 +2099,7 @@ async function boot() {
 
 load();
 wire();
+controllaVersioni();
 boot();
 
 // In locale il service worker serve solo a restituire file vecchi mentre lavoriamo:
