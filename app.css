@@ -123,9 +123,9 @@ html, body {
 }
 
 .topbar-inner {
-  max-width: 1760px;
+  max-width: 2400px;
   margin: 0 auto;
-  padding: 0 clamp(12px, 3vw, 28px);
+  padding: 0 clamp(12px, 2.4vw, 30px);
 }
 
 .topbar-row { display: flex; align-items: center; gap: 10px; }
@@ -162,11 +162,111 @@ html, body {
 
 /* ---------------- blocchi ---------------- */
 
-main {
-  max-width: 1760px;
+/* ---------------- impianto della pagina ---------------- */
+
+/* Tre zone: menù, contenuto, colonna laterale. Su schermi larghi stanno
+   affiancate e lo schermo si riempie di roba utile invece che di vuoto;
+   restringendo, la laterale scivola sotto al contenuto. */
+.layout {
+  display: grid;
+  align-items: start;
+  grid-template-columns: 210px minmax(0, 1fr);
+  grid-template-areas:
+    "nav main"
+    "nav rail";
+  gap: 30px;
+  max-width: 2400px;
   margin: 0 auto;
-  padding: 20px clamp(12px, 3vw, 28px) 80px;
+  padding: 20px clamp(12px, 2.4vw, 30px) 90px;
 }
+
+.nav { grid-area: nav; }
+main  { grid-area: main; min-width: 0; }
+.rail { grid-area: rail; min-width: 0; }
+
+@media (min-width: 1560px) {
+  .layout {
+    grid-template-columns: 210px minmax(0, 1fr) 340px;
+    grid-template-areas: "nav main rail";
+  }
+  /* nella colonna stretta i poster stanno a due per riga */
+  .rail .grid-sm { grid-template-columns: repeat(2, 1fr); }
+  .rail .block { margin-bottom: 26px; }
+}
+
+/* la navigazione resta ferma mentre scorri */
+.nav {
+  position: sticky;
+  top: 104px;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: calc(100dvh - 130px);
+  overflow-y: auto;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  font: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  color: var(--txt-2);
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  padding: 8px 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .13s, color .13s;
+}
+.nav-item:hover { color: var(--txt); background: var(--bg-2); }
+.nav-item.on { color: var(--txt); background: var(--bg-3); font-weight: 600; }
+
+.nav-n {
+  margin-left: auto;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--txt-2);
+  background: var(--bg-2);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+.nav-item.on .nav-n { background: #2b3646; color: var(--txt); }
+
+/* le fasce della sezione principale, rientrate sotto alla sua voce */
+.nav-fasce { display: flex; flex-direction: column; gap: 1px; margin: 1px 0 6px; }
+.nav-fascia {
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  color: var(--txt-2);
+  background: transparent;
+  border: 0;
+  border-left: 2px solid var(--line);
+  border-radius: 0;
+  margin-left: 17px;
+  padding: 5px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .13s, border-color .13s;
+}
+.nav-fascia:hover { color: var(--txt); border-left-color: var(--accent); }
+
+/* Le sezioni secondarie stanno affiancate finché sono chiuse: così lo schermo
+   largo non resta vuoto. Quella che apri si prende tutta la riga, perché una
+   griglia di poster dentro mezza colonna non si guarda. */
+.secondarie {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(430px, 1fr));
+  gap: 0 30px;
+  align-items: start;
+}
+.secondarie .collapsible:not(.closed) { grid-column: 1 / -1; }
+.secondarie .collapsible.closed { margin-bottom: 12px; }
 
 .block { margin-bottom: 34px; }
 
@@ -207,10 +307,10 @@ main {
    su un monitor da 2500px tredici miniature da 176px non le legge nessuno. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(216px, 1fr));
-  gap: 26px 20px;
+  grid-template-columns: repeat(auto-fill, minmax(186px, 1fr));
+  gap: 22px 16px;
 }
-.grid-sm { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px 14px; }
+.grid-sm { grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); gap: 18px 12px; }
 
 .card { position: relative; display: block; color: inherit; text-decoration: none; }
 
@@ -364,6 +464,47 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 20px 0; }
   padding: 10px 18px;
   font-size: 14px;
   box-shadow: var(--shadow);
+}
+
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-areas: "nav" "main" "rail";
+    gap: 14px;
+  }
+
+  .nav {
+    position: sticky;
+    top: 96px;
+    z-index: 15;
+    flex-direction: row;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 8px 0;
+    margin: 0 calc(-1 * clamp(12px, 2.4vw, 30px));
+    padding-inline: clamp(12px, 2.4vw, 30px);
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+    max-height: none;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+
+  .nav-item {
+    width: auto;
+    flex: none;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 7px 13px;
+  }
+  .nav-item.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .nav-item.on .nav-n { background: rgba(255, 255, 255, .22); color: #fff; }
+
+  /* le fasce non stanno in una barra orizzontale: si raggiungono scorrendo */
+  .nav-fasce { display: none; }
+
+  .secondarie { grid-template-columns: 1fr; gap: 0; }
 }
 
 @media (max-width: 560px) {

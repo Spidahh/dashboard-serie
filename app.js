@@ -29,6 +29,7 @@ const DEFAULTS = {
   showDropped: true,
   enTitles: true,
   aperte: null,        // quali sezioni tieni aperte; null = come le trova all'inizio
+  vista: 'tutto',      // 'tutto' oppure una sola sezione alla volta
   autoRefresh: true,
   sort: 'recent',
   type: 'all'
@@ -638,13 +639,30 @@ function render() {
   paint('gridStart', groups.start, 'cStart', true);
   paint('gridArchive', groups.archive, 'cArchive', true);
 
-  show('#emptyWatch', groups.watch.length === 0);
-  show('#secSoon', groups.soon.length > 0);
-  show('#secNuove', nuove > 0);
-  show('#secWaiting', groups.waiting.length > 0);
-  show('#secPaused', groups.paused.length > 0);
-  show('#secStart', groups.start.length > 0);
-  show('#secArchive', groups.archive.length > 0);
+  const conteggi = {
+    watch: groups.watch.length, soon: groups.soon.length, nuove,
+    waiting: groups.waiting.length, paused: groups.paused.length,
+    start: groups.start.length, archive: groups.archive.length
+  };
+  aggiornaMenu(conteggi, groups.watch);
+
+  // La vista decide cosa resta in pagina: "tutto" oppure una sola sezione.
+  const v = S.settings.vista || 'tutto';
+  const pieno = v === 'tutto';
+  const sezioni = {
+    watch: '#secWatch', soon: '#secSoon', nuove: '#secNuove', waiting: '#secWaiting',
+    paused: '#secPaused', start: '#secStart', archive: '#secArchive'
+  };
+  for (const [chiave, sel] of Object.entries(sezioni)) {
+    const visibile = (pieno || v === chiave) && (chiave === 'watch' || conteggi[chiave] > 0);
+    show(sel, visibile);
+    // guardando una sezione sola non ha senso tenerla chiusa
+    if (!pieno && v === chiave) $(sel)?.classList.remove('closed');
+  }
+  show('#emptyWatch', (pieno || v === 'watch') && groups.watch.length === 0);
+
+  const railPieno = ['#secSoon', '#secNuove'].some(sel => !$(sel)?.classList.contains('hidden'));
+  show('#rail', railPieno);
 
   const tot = Object.keys(S.lib).length;
   const arretrati = groups.watch.reduce((s, a) => s + a.backlog, 0);
@@ -901,6 +919,50 @@ function badge(cls, txt) {
   return b;
 }
 
+/* ---------------- il menù di sinistra ---------------- */
+
+const FASCE_NAV = ['Appena usciti', 'Questa settimana', 'Questo mese', 'Più indietro'];
+
+function aggiornaMenu(conteggi, watch) {
+  for (const [chiave, id] of Object.entries({
+    watch: 'nWatch', soon: 'nSoon', nuove: 'nNuove', waiting: 'nWaiting',
+    paused: 'nPaused', start: 'nStart', archive: 'nArchive'
+  })) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = conteggi[chiave] || 0;
+  }
+
+  // le fasce compaiono nel menù solo quando esistono davvero
+  const host = $('#navFasce');
+  if (!host) return;
+  const mostra = (S.settings.vista || 'tutto') !== 'archive' && S.settings.sort === 'recent';
+  host.replaceChildren();
+  if (!mostra || !watch.length) return;
+
+  const dentro = new Set(splitBands(watch).filter(b => b.items.length).map(b => b.label));
+  for (const nome of FASCE_NAV) {
+    if (!dentro.has(nome)) continue;
+    const b = document.createElement('button');
+    b.className = 'nav-fascia';
+    b.textContent = nome;
+    b.onclick = () => {
+      const t = [...document.querySelectorAll('.band-title')].find(h => h.firstChild?.textContent === nome);
+      if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    host.appendChild(b);
+  }
+}
+
+function cambiaVista(v) {
+  S.settings.vista = v;
+  for (const b of document.querySelectorAll('.nav-item')) b.classList.toggle('on', b.dataset.vista === v);
+  // tornando alla vista completa le sezioni riprendono lo stato che avevi scelto tu
+  if (v === 'tutto') applicaSezioni();
+  save();
+  render();
+  scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 /* ---------------- date in parole ---------------- */
 
 function when(t) {
@@ -976,9 +1038,13 @@ function logout(msg) {
 }
 
 // Le sezioni restano come le hai lasciate l'ultima volta.
+const APERTE_INIZIALI = {
+  secSoon: true, secNuove: true,
+  secWaiting: false, secPaused: false, secStart: false, secArchive: false
+};
+
 function applicaSezioni() {
-  const scelte = S.settings.aperte;
-  if (!scelte) return;
+  const scelte = S.settings.aperte || APERTE_INIZIALI;
   for (const sez of document.querySelectorAll('.collapsible')) {
     if (scelte[sez.id] === undefined) continue;
     sez.classList.toggle('closed', !scelte[sez.id]);
@@ -1006,6 +1072,11 @@ function wire() {
   };
 
   $('#sort').onchange = ev => { S.settings.sort = ev.target.value; save(); render(); };
+
+  $('#nav').onclick = ev => {
+    const b = ev.target.closest('.nav-item');
+    if (b) cambiaVista(b.dataset.vista);
+  };
 
   $('#sPause').oninput = ev => {
     S.settings.pauseDays = +ev.target.value;
@@ -1084,6 +1155,9 @@ async function boot() {
   updateSyncInfo();
 
   $('#sort').value = S.settings.sort;
+  for (const b of document.querySelectorAll('.nav-item')) {
+    b.classList.toggle('on', b.dataset.vista === (S.settings.vista || 'tutto'));
+  }
   for (const c of $('#typeChips').children) c.classList.toggle('on', c.dataset.type === S.settings.type);
 
   await sync();

@@ -51,7 +51,31 @@ servire i file vecchi mentre lavori.
 | **Da iniziare** | Il tuo "Plan to watch", più le serie che hai in lista ma non hai mai aperto. |
 | **Archivio** | Completate e abbandonate senza novità. |
 
-Tutte tranne la prima sono chiuse: si aprono con un clic sul titolo.
+Tutte tranne la prima sono chiuse: si aprono con un clic sul titolo, e restano
+come le lasci anche dopo aver ricaricato.
+
+### Il menù a sinistra
+
+Ogni voce porta il suo conteggio. Cliccandola **la pagina mostra solo quella
+sezione**, già aperta: è il modo rapido per andare in Archivio o in Pausa senza
+scorrere. "Tutto" rimette a posto tutto com'era.
+
+Sotto "Da guardare ora" compaiono le fasce (*Appena usciti*, *Questo mese*…):
+quelle non filtrano, portano il punto giusto sotto gli occhi.
+
+Su schermi stretti il menù diventa una barra orizzontale sopra al contenuto.
+
+### Come è disposta la pagina
+
+Su uno schermo largo ci sono tre zone affiancate: il menù, il contenuto, e una
+colonna laterale con *In arrivo* e *Stagioni nuove*. Così lo spazio a destra è
+pieno di roba utile invece che vuoto.
+
+Sotto i 1560px la colonna laterale scende sotto al contenuto. Sotto i 1100px anche
+il menù passa sopra, in orizzontale.
+
+Le sezioni chiuse si affiancano fra loro; quella che apri si prende tutta la riga,
+perché una griglia di poster dentro mezza colonna non si guarda.
 
 **Regola di fondo:** una serie finisce **In pausa** solo se ci sono episodi usciti
 che non hai visto. Se sei in pari e stai solo aspettando la stagione nuova, va in
