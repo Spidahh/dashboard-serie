@@ -55,8 +55,40 @@ Per attivarlo serve un `client_id` di AniList, da creare su
 [anilist.co/settings/developer](https://anilist.co/settings/developer) mettendo come
 indirizzo di ritorno quello del sito. Finché manca, il pulsante non compare.
 
-**Trakt** e **MyAnimeList** non entrano allo stesso modo: il primo scambia il token solo
-dietro un segreto, il secondo non accetta chiamate dal browser. Vedi il fondo di questo file.
+**Trakt** copre serie TV e film. È l'unica sorgente che ha bisogno di un pezzetto di
+server, perché consegna il token solo dietro un segreto. Il file
+[`worker/trakt-token.js`](worker/trakt-token.js) è quel pezzetto: venti righe su
+Cloudflare che fanno *solo* lo scambio del token. Tutte le altre chiamate partono dal
+browser come per gli altri.
+
+**MyAnimeList** resta fuori: il suo server non accetta chiamate dal browser, quindi ci
+vorrebbe un proxy per ogni singola richiesta, cioè un server vero da mantenere.
+
+**TV Time** ha chiuso il 15 luglio 2026.
+
+### Come si accende una sorgente
+
+Tutte e due si spengono da sole se non sono configurate: il pulsante non compare
+nemmeno, invece di dare errore.
+
+**AniList** — due minuti, niente server.
+
+1. vai su [anilist.co/settings/developer](https://anilist.co/settings/developer) e crea
+   un client
+2. come indirizzo di ritorno metti quello del sito, per esempio
+   `https://spidahh.github.io/dashboard-serie/`
+3. copia il numero del client in `CFG.anilist.clientId` dentro `app.js`
+
+**Trakt** — serve anche il Worker.
+
+1. registra l'app su [trakt.tv/oauth/applications/new](https://trakt.tv/oauth/applications/new),
+   con redirect URI `urn:ietf:wg:oauth:2.0:oob`
+2. segui le istruzioni in cima a [`worker/trakt-token.js`](worker/trakt-token.js) per
+   metterlo su Cloudflare (piano gratuito)
+3. copia Client ID e indirizzo del Worker in `CFG.trakt` dentro `app.js`
+
+Il `client_secret` di Trakt **non** va mai in `app.js`: vive solo dentro il Worker, come
+variabile cifrata.
 
 ## Le sezioni
 

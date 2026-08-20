@@ -8,7 +8,7 @@
 <link rel="icon" href="icon.svg">
 <link rel="manifest" href="manifest.webmanifest">
 <!-- il numero di versione sale a ogni modifica: senza, il browser continua a servire i file vecchi -->
-<link rel="stylesheet" href="app.css?v=15">
+<link rel="stylesheet" href="app.css?v=16">
 </head>
 <body>
 
@@ -28,6 +28,7 @@
       </p>
       <button id="btnLogin" class="btn btn-big">Collega Simkl</button>
       <button id="btnLoginAl" class="btn btn-alt">Ho AniList (solo anime)</button>
+      <button id="btnLoginTk" class="btn btn-alt">Ho Trakt (serie TV e film)</button>
       <a class="login-guida" href="guida.html">Non ce l'ho / non so cos'è &#8594; leggi la guida</a>
     </div>
 
@@ -219,6 +220,13 @@
       </div>
       <div class="servizio">
         <div>
+          <b>Trakt</b>
+          <span class="servizio-nota">Serie TV e film. Le serie che nascondi dal progresso su Trakt qui diventano abbandonate.</span>
+        </div>
+        <button id="btnTkConn" class="btn btn-ghost btn-piccolo"></button>
+      </div>
+      <div class="servizio">
+        <div>
           <b>AniList</b>
           <span class="servizio-nota">Solo anime. Se lo colleghi, i tuoi anime di lì entrano nella dashboard.</span>
         </div>
@@ -238,6 +246,6 @@
   </div>
 </div>
 
-<script src="app.js?v=15"></script>
+<script src="app.js?v=16"></script>
 </body>
 </html>

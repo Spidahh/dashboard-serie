@@ -26,6 +26,16 @@ const CFG = {
     auth: 'https://anilist.co/api/v2/oauth/authorize'
   },
 
+  /* Terza sorgente: Trakt. E' l'unica che ha bisogno di un pezzetto di server,
+     perche' consegna il token solo dietro un segreto, e un segreto in una pagina
+     web non ci puo' stare. Il file worker/trakt-token.js spiega come metterlo su.
+     Senza questi due valori il pulsante non compare. */
+  trakt: {
+    clientId: '',                                   // <-- da riempire
+    worker: '',                                     // <-- indirizzo del Worker
+    api: 'https://api.trakt.tv'
+  },
+
   calendarTtl: 5 * 3600e3,      // il CDN di Simkl tiene il calendario 5 ore
   autoRefreshMs: 15 * 60e3      // limite consigliato da Simkl: 15-30 minuti
 };
@@ -57,6 +67,7 @@ let S = {
   calAt: 0,
   det: {},          // "shows:1648964" -> { status, lastAired, at }  scheda della serie
   al: { token: null, user: null },   // collegamento AniList
+  tk: { token: null, refresh: null, scade: 0 },   // collegamento Trakt
   nuove: [],        // stagioni nuove che stanno uscendo e che non hai in libreria
   simili: [],       // consigliate da chi ha visto le stesse cose che hai visto tu
   novita: [],       // appena uscite, che non hai in libreria
@@ -155,13 +166,7 @@ async function startPin() {
     return loginError('Simkl non ha restituito un codice. Riprova tra poco.');
   }
 
-  $('#pinCode').textContent = init.user_code;
-  const url = init.verification_url || init.verification_uri || 'https://simkl.com/pin';
-  const link = $('#pinUrl');
-  link.href = url;
-  link.textContent = url.replace(/^https?:\/\//, '');
-  show('#loginStep1', false);
-  show('#loginStep2', true);
+  mostraPin(init.user_code, init.verification_url || init.verification_uri || 'https://simkl.com/pin');
 
   const deadline = Date.now() + (init.expires_in || 900) * 1000;
   const every = (init.interval || 5) * 1000;
@@ -185,6 +190,18 @@ async function startPin() {
       console.warn('Attesa PIN:', e.message);
     }
   }, every);
+}
+
+/* La schermata "apri questa pagina e scrivi il codice": la usano sia Simkl sia Trakt. */
+function mostraPin(codice, url) {
+  $('#pinCode').textContent = codice;
+  const link = $('#pinUrl');
+  link.href = url;
+  link.textContent = url.replace(/^https?:\/\//, '');
+  show('#login', true);
+  show('#app', false);
+  show('#loginStep1', false);
+  show('#loginStep2', true);
 }
 
 function stopPin() {
@@ -217,6 +234,7 @@ async function sync({ full = false } = {}) {
     // senza Simkl c'è solo AniList: giro più corto
     if (!S.token) {
       await syncAniList();
+      await syncTrakt();
       await refreshCalendar({ force: true });
       S.lastSync = Date.now();
       save();
@@ -234,6 +252,7 @@ async function sync({ full = false } = {}) {
       save();
       await refreshCalendar();
       await syncAniList();
+      await syncTrakt();
       await refreshDetails(chiaviDaApprofondire());
       render();
       completaTitoli();
@@ -263,6 +282,7 @@ async function sync({ full = false } = {}) {
     save();
 
     await syncAniList();
+    await syncTrakt();
     await refreshCalendar({ force: true });
     render();                                   // disegno subito con quello che ho
     await refreshDetails(chiaviDaApprofondire());
@@ -341,7 +361,7 @@ async function reconcile() {
    quello c'è il pulsante "nascondi" su ogni segnalazione.
 */
 // Gli id di Simkl e di AniList possono coincidere: nel calendario vanno tenuti separati.
-const chiaveCal = e => (e._fonte === 'anilist' ? 'al:' : 'sk:') + e._id;
+const chiaveCal = e => (e._fonte === 'anilist' ? 'al:' : e._fonte === 'trakt' ? 'tk:' : 'sk:') + e._id;
 
 function radice(titolo) {
   let t = decodifica(titolo || '').toLowerCase();
@@ -358,7 +378,7 @@ async function refreshCalendar({ force = false } = {}) {
   const aggiornato = Date.now() - S.calAt < CFG.calendarTtl && Object.keys(S.cal).length && S.calVer === CAL_VER;
   if (!force && aggiornato) return;
 
-  const mie = new Set(Object.values(S.lib).filter(e => e._fonte !== 'anilist').map(e => String(e._id)));
+  const mie = new Set(Object.values(S.lib).filter(e => !e._fonte).map(e => String(e._id)));
   if (!mie.size) return;
 
   /* Le "radici" di quello che hai già. Ma una stagione nuova ha senso proporla
@@ -424,7 +444,7 @@ async function refreshCalendar({ force = false } = {}) {
     }
   }
 
-  for (const [k, v] of Object.entries(S.cal)) if (k.startsWith('al:')) out[k] = v;
+  for (const [k, v] of Object.entries(S.cal)) if (k.startsWith('al:') || k.startsWith('tk:')) out[k] = v;
   S.cal = out;
   S.nuove = [...trovate.values()].sort((a, b) => a.t - b.t).slice(0, 60);
   S.calVer = CAL_VER;
@@ -466,7 +486,7 @@ function schedaScaduta(det, now) {
 function chiaviDaApprofondire() {
   const out = [];
   for (const [key, e] of Object.entries(S.lib)) {
-    if (e.status === 'plantowatch' || e._fonte === 'anilist') continue;
+    if (e.status === 'plantowatch' || e._fonte) continue;   // le schede sono di Simkl
     const backlog = (e.total_episodes_count || 0) - (e.not_aired_episodes_count || 0) - (e.watched_episodes_count || 0);
     if (backlog >= 1) out.push(key);
   }
@@ -512,7 +532,7 @@ async function completaTitoli() {
   titoliInCorso = true;
   try {
     const mancanti = Object.keys(S.lib)
-      .filter(k => S.lib[k]._fonte !== 'anilist')
+      .filter(k => !S.lib[k]._fonte)
       .filter(k => !S.det[k] || S.det[k].enTitle === undefined);
     let n = 0;
     for (const key of mancanti) {
@@ -740,6 +760,208 @@ function alAggiungi(v) {
   return true;
 }
 
+/* ================================================================
+   Trakt — terza sorgente
+   ================================================================
+
+   Le chiamate ai dati partono dal browser: Trakt le accetta. L'unica cosa che
+   non può passare di qui è lo scambio del token, che richiede il segreto: per
+   quello c'è il Worker (vedi worker/trakt-token.js).
+
+   Il token di Trakt dura 7 giorni, quindi va rinnovato. Anche il rinnovo passa
+   dal Worker, per lo stesso motivo.
+
+   Trakt non ha gli stati "in pausa" e "abbandonata" come Simkl. In compenso ha
+   le serie "nascoste dal progresso", che è la stessa cosa detta in altro modo:
+   quelle diventano abbandonate.
+*/
+
+function tkDisponibile() { return !!(CFG.trakt.clientId && CFG.trakt.worker); }
+function tkCollegato() { return !!(S.tk && S.tk.token); }
+
+function tkIntestazioni() {
+  return {
+    'Content-Type': 'application/json',
+    'trakt-api-version': '2',
+    'trakt-api-key': CFG.trakt.clientId,
+    ...(S.tk && S.tk.token ? { Authorization: 'Bearer ' + S.tk.token } : {})
+  };
+}
+
+async function tkChiedi(percorso, params = {}) {
+  const u = new URL(CFG.trakt.api + percorso);
+  for (const [k, v] of Object.entries(params)) if (v != null) u.searchParams.set(k, v);
+  const r = await fetch(u, { headers: tkIntestazioni() });
+  if (r.status === 401) throw new Error('TK_SCADUTO');
+  if (!r.ok) throw new Error('Trakt ' + r.status);
+  return r.json();
+}
+
+// Passo 1: chiedo un codice. Questa chiamata non ha bisogno di segreti.
+async function tkLogin() {
+  if (!tkDisponibile()) return toast('Trakt non è configurato su questo sito');
+  let init;
+  try {
+    const r = await fetch(CFG.trakt.api + '/oauth/device/code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_id: CFG.trakt.clientId })
+    });
+    init = await r.json();
+  } catch (e) { return toast('Non riesco a contattare Trakt'); }
+  if (!init || !init.user_code) return toast('Trakt non ha dato un codice, riprova');
+
+  mostraPin(init.user_code, init.verification_url || 'https://trakt.tv/activate');
+
+  const fine = Date.now() + (init.expires_in || 600) * 1000;
+  const ogni = (init.interval || 5) * 1000;
+
+  clearInterval(ui.pinTimer);
+  ui.pinTimer = setInterval(async () => {
+    if (Date.now() > fine) { stopPin(); return loginError('Il codice è scaduto. Riprova.'); }
+    try {
+      const r = await fetch(CFG.trakt.worker, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: init.device_code })
+      });
+      if (r.status === 400) return;                 // non hai ancora confermato
+      const d = await r.json();
+      if (!d.access_token) return;
+      stopPin();
+      S.tk = { token: d.access_token, refresh: d.refresh_token || null,
+               scade: Date.now() + (d.expires_in || 7 * 86400) * 1000 };
+      save();
+      await boot();
+    } catch (e) { /* riprovo al giro dopo */ }
+  }, ogni);
+}
+
+// Il token dura una settimana: lo rinnovo prima che scada.
+async function tkRinnova() {
+  if (!S.tk || !S.tk.refresh) return false;
+  try {
+    const r = await fetch(CFG.trakt.worker, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ azione: 'rinnova', refresh_token: S.tk.refresh })
+    });
+    const d = await r.json();
+    if (!d.access_token) return false;
+    S.tk = { token: d.access_token, refresh: d.refresh_token || S.tk.refresh,
+             scade: Date.now() + (d.expires_in || 7 * 86400) * 1000 };
+    save();
+    return true;
+  } catch (e) { return false; }
+}
+
+function tkScollega() {
+  S.tk = { token: null, refresh: null, scade: 0 };
+  for (const k of Object.keys(S.lib)) if (S.lib[k]._fonte === 'trakt') delete S.lib[k];
+  for (const k of Object.keys(S.cal)) if (k.startsWith('tk:')) delete S.cal[k];
+  save();
+  render();
+}
+
+async function syncTrakt() {
+  if (!tkCollegato()) return;
+  if (S.tk.scade && Date.now() > S.tk.scade - DAY) await tkRinnova();
+
+  try {
+    const oggi = new Date().toISOString().slice(0, 10);
+    const [viste, inLista, nascoste, calendario] = await Promise.all([
+      tkChiedi('/sync/watched/shows', { extended: 'full' }),
+      tkChiedi('/sync/watchlist/shows', { extended: 'full' }).catch(() => []),
+      tkChiedi('/users/hidden/progress_watched', { type: 'show', limit: 500 }).catch(() => []),
+      tkChiedi('/calendars/my/shows/' + oggi + '/33').catch(() => [])
+    ]);
+
+    for (const k of Object.keys(S.lib)) if (S.lib[k]._fonte === 'trakt') delete S.lib[k];
+
+    const mollate = new Set((nascoste || []).map(x => x.show && x.show.ids && x.show.ids.trakt).filter(Boolean));
+
+    // il calendario dice quando esce il prossimo episodio di ogni serie
+    const prossimi = new Map();
+    for (const v of calendario || []) {
+      const id = v.show && v.show.ids && v.show.ids.trakt;
+      const t = Date.parse(v.first_aired);
+      if (!id || !isFinite(t)) continue;
+      const gia = prossimi.get(id);
+      if (!gia || t < gia.t) prossimi.set(id, { t, episode: v.episode ? v.episode.number : null, season: v.episode ? v.episode.season : null });
+    }
+
+    for (const v of viste || []) tkAggiungi(v, mollate, prossimi, false);
+    for (const v of inLista || []) tkAggiungi(v, mollate, prossimi, true);
+
+    S.tk.at = Date.now();
+    save();
+
+  } catch (err) {
+    if (err.message === 'TK_SCADUTO') {
+      if (await tkRinnova()) return syncTrakt();
+      S.tk = { token: null, refresh: null, scade: 0 };
+      save();
+      toast('Il collegamento con Trakt è scaduto');
+    } else {
+      console.warn('Trakt:', err.message);
+    }
+  }
+}
+
+function tkAggiungi(v, mollate, prossimi, daIniziare) {
+  const sh = v.show;
+  const id = sh && sh.ids && sh.ids.trakt;
+  if (!id) return;
+
+  const key = 'tk:' + id;
+  if (S.lib[key]) return;                      // già preso dalle viste
+
+  // gli episodi visti si contano dalle stagioni, saltando gli speciali (stagione 0)
+  let visti = 0;
+  for (const st of v.seasons || []) {
+    if ((st.number == null ? 0 : st.number) < 1) continue;
+    visti += (st.episodes || []).length;
+  }
+  const usciti = sh.aired_episodes || visti;
+  const inOnda = /returning|continuing|in production|planned|upcoming/i.test(sh.status || '');
+  const prossimo = prossimi.get(id) || null;
+
+  let stato;
+  if (daIniziare) stato = 'plantowatch';
+  else if (mollate.has(id)) stato = 'dropped';
+  else if (visti >= usciti && !inOnda) stato = 'completed';
+  else stato = 'watching';
+
+  S.lib[key] = {
+    _fonte: 'trakt',
+    _type: 'shows',
+    _id: id,
+    status: stato,
+    watched_episodes_count: visti,
+    total_episodes_count: usciti,
+    not_aired_episodes_count: 0,               // aired_episodes conta solo quelli usciti
+    last_watched_at: v.last_watched_at || null,
+    last_watched: visti ? 'E' + visti : null,
+    next_to_watch: visti < usciti ? 'E' + (visti + 1) : null,
+    next_to_watch_info: visti < usciti ? { title: '', episode: visti + 1, date: null } : undefined,
+    show: {
+      title: sh.title || '(senza titolo)',
+      poster: null,                            // Trakt non manda immagini: resta il titolo
+      year: sh.year || null,
+      ids: { simkl: id, slug: (sh.ids && sh.ids.slug) || '' }
+    }
+  };
+
+  S.det[key] = {
+    status: inOnda ? 'airing' : 'ended',
+    lastAired: prossimo ? new Date(prossimo.t - 7 * DAY).toISOString() : (v.last_watched_at || null),
+    enTitle: null,
+    at: Date.now()
+  };
+
+  if (prossimo) S.cal['tk:' + id] = { t: prossimo.t, season: prossimo.season, episode: prossimo.episode };
+}
+
 /* ---------------- consigli ---------------- */
 
 /*
@@ -757,7 +979,7 @@ const CONSIGLI_TTL = 7 * DAY;
 function semiPerConsigli() {
   const semi = [];
   for (const [k, e] of Object.entries(S.lib)) {
-    if (e._fonte === 'anilist') continue;      // i consigli arrivano dalle schede Simkl
+    if (e._fonte) continue;                    // i consigli arrivano dalle schede Simkl
     if (e.status !== 'completed' && e.status !== 'watching') continue;
     if ((e.watched_episodes_count || 0) < 3) continue;
     const voto = e.user_rating || 0;
@@ -1377,6 +1599,7 @@ function posterUrl(poster, piccolo) {
 
 function linkScheda(e, slug) {
   if (e._fonte === 'anilist') return `https://anilist.co/anime/${e._id}`;
+  if (e._fonte === 'trakt') return `https://trakt.tv/shows/${slug || e._id}`;
   const kind = e._type === 'anime' ? 'anime' : 'tv';
   return `https://simkl.com/${kind}/${e._id}/${slug || ''}`;
 }
@@ -1546,6 +1769,29 @@ function aggiornaServizi() {
       aggiornaServizi(); render();
     };
   }
+  const tk = $('#btnTkConn');
+  if (tk) {
+    const box = tk.closest('.servizio');
+    if (!tkDisponibile()) {
+      box.classList.remove('on');
+      tk.disabled = true;
+      tk.textContent = 'non configurato';
+      tk.title = 'Mancano il client_id di Trakt o l\'indirizzo del Worker';
+    } else {
+      tk.disabled = false;
+      const ok = tkCollegato();
+      tk.textContent = ok ? 'Scollega' : 'Collega';
+      box.classList.toggle('on', ok);
+      tk.onclick = () => {
+        if (!ok) return tkLogin();
+        if (!confirm('Scollegare Trakt? Le serie prese da lì spariscono dalla dashboard.')) return;
+        tkScollega();
+        if (!collegato()) return logout();
+        aggiornaServizi();
+      };
+    }
+  }
+
   if (al) {
     const box = al.closest('.servizio');
     if (!alDisponibile()) {
@@ -1574,7 +1820,7 @@ function aggiornaServizi() {
 
 function logout(msg) {
   S = { token: null, act: null, lib: {}, meta: {}, cal: {}, calAt: 0, det: {},
-        al: { token: null, user: null }, nuove: [], simili: [], novita: [], consigliAt: 0,
+        al: { token: null, user: null }, tk: { token: null, refresh: null, scade: 0 }, nuove: [], simili: [], novita: [], consigliAt: 0,
         nascoste: S.nascoste || {}, lastSync: 0, settings: S.settings };
   save();
   show('#app', false);
@@ -1603,6 +1849,8 @@ function wire() {
   $('#btnLogin').onclick = startPin;
   $('#btnLoginAl').onclick = alLogin;
   show('#btnLoginAl', alDisponibile());
+  $('#btnLoginTk').onclick = tkLogin;
+  show('#btnLoginTk', tkDisponibile());
   $('#btnCancelPin').onclick = stopPin;
   $('#btnSync').onclick = () => sync();
   $('#btnSettings').onclick = openSettings;
@@ -1714,7 +1962,7 @@ function exportSettings() {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
-const collegato = () => !!S.token || alCollegato();
+const collegato = () => !!S.token || alCollegato() || tkCollegato();
 
 async function boot() {
   alRaccogliToken();          // se torno da AniList, il token è nell'indirizzo
