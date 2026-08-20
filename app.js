@@ -43,6 +43,8 @@ let S = {
   cal: {},          // "1648964" -> { t, season, episode }   (solo titoli in libreria)
   calAt: 0,
   det: {},          // "shows:1648964" -> { status, lastAired, at }  scheda della serie
+  nuove: [],        // stagioni nuove che stanno uscendo e che non hai in libreria
+  nascoste: {},     // id -> true, segnalazioni che hai tolto a mano
   lastSync: 0,
   settings: { ...DEFAULTS }
 };
@@ -284,28 +286,83 @@ async function reconcile() {
 
 /* ---------------- calendario (file pubblico su CDN, non consuma quota) ---------------- */
 
-async function refreshCalendar({ force = false } = {}) {
-  if (!force && Date.now() - S.calAt < CFG.calendarTtl && Object.keys(S.cal).length) return;
+/*
+   Su Simkl ogni stagione di un anime è spesso una voce separata, e il tracker
+   automatico la aggiunge alla tua libreria solo quando ne guardi un episodio.
+   Finché non lo fai, la stagione nuova non esiste per la dashboard.
 
-  const mine = new Set(Object.values(S.lib).map(e => String(e._id)));
-  if (!mine.size) return;
+   Per pescarla confronto il calendario dei prossimi 33 giorni con quello che
+   hai già: se sta uscendo un titolo che non hai in libreria ma che ha la stessa
+   radice di uno che segui, te lo segnalo.
+
+   È un confronto sui nomi, non su un collegamento ufficiale: Simkl non espone
+   il legame fra le stagioni di una stessa serie. Sugli anime funziona bene
+   perché il prefisso resta uguale; qualche caso storto è messo in conto, e per
+   quello c'è il pulsante "nascondi" su ogni segnalazione.
+*/
+function radice(titolo) {
+  let t = decodifica(titolo || '').toLowerCase();
+  t = t.split(/:| - |–|—/)[0];                                   // taglio al primo sottotitolo
+  t = t.replace(/\b(season|stagione|part|parte|cour|final|movie|special|ova|ona|tv)\b.*$/, '');
+  t = t.replace(/\s+(\d+|[ivx]+)\s*$/, '');                       // numero o numero romano finale
+  t = t.replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  return t;
+}
+
+const CAL_VER = 2;   // sale quando cambia cosa ricavo dal calendario, così la cache si rifà
+
+async function refreshCalendar({ force = false } = {}) {
+  const aggiornato = Date.now() - S.calAt < CFG.calendarTtl && Object.keys(S.cal).length && S.calVer === CAL_VER;
+  if (!force && aggiornato) return;
+
+  const mie = new Set(Object.values(S.lib).map(e => String(e._id)));
+  if (!mie.size) return;
+
+  // le "radici" di quello che hai già, sia col titolo inglese sia con l'originale
+  const radici = new Map();
+  for (const [k, e] of Object.entries(S.lib)) {
+    for (const r of [radice(titolo(k, e)), radice(e.show?.title)]) {
+      if (r.length >= 5 && !radici.has(r)) radici.set(r, titolo(k, e));
+    }
+  }
 
   const out = {};
+  const trovate = new Map();
   const floor = Date.now() - 2 * DAY;
 
-  for (const file of ['tv', 'anime']) {
+  for (const [file, tipo] of [['tv', 'shows'], ['anime', 'anime']]) {
     try {
       const res = await fetch(`${CFG.calendar}/${file}.json`);
       if (!res.ok) continue;
       const arr = await res.json();
+
       for (const x of arr) {
         const id = x?.ids?.simkl_id;
-        if (!id || !mine.has(String(id))) continue;
+        if (!id) continue;
         const t = Date.parse(x.date);
         if (!isFinite(t) || t < floor) continue;
-        const cur = out[id];
-        if (!cur || t < cur.t) {
-          out[id] = { t, season: x.episode?.season ?? null, episode: x.episode?.episode ?? null };
+
+        if (mie.has(String(id))) {                      // ce l'hai: mi serve solo la data
+          const cur = out[id];
+          if (!cur || t < cur.t) {
+            out[id] = { t, season: x.episode?.season ?? null, episode: x.episode?.episode ?? null };
+          }
+          continue;
+        }
+
+        const r = radice(x.title);                      // non ce l'hai: è roba che segui?
+        if (r.length < 5 || !radici.has(r)) continue;
+        const gia = trovate.get(id);
+        if (!gia || t < gia.t) {
+          trovate.set(id, {
+            id, tipo, t,
+            title: x.title,
+            slug: x.ids?.slug || '',
+            poster: x.poster || null,
+            episode: x.episode?.episode ?? null,
+            season: x.episode?.season ?? null,
+            da: radici.get(r)
+          });
         }
       }
     } catch (e) {
@@ -314,6 +371,8 @@ async function refreshCalendar({ force = false } = {}) {
   }
 
   S.cal = out;
+  S.nuove = [...trovate.values()].sort((a, b) => a.t - b.t).slice(0, 60);
+  S.calVer = CAL_VER;
   S.calAt = Date.now();
   save();
 }
@@ -520,6 +579,11 @@ function analyse(key, e, now) {
     else bucket = 'archive';
   }
 
+  /* Zero episodi visti non vuol dire "messa in pausa": vuol dire mai cominciata.
+     Il posto giusto è "Da iniziare", insieme alle altre che devi ancora aprire.
+     Se invece è appena uscita resta in griglia, perché lì il bucket non è 'paused'. */
+  if (bucket === 'paused' && watched === 0) bucket = 'start';
+
   const ov = S.meta[key]?.override;
   if (ov === 'watch' && bucket !== 'watch') bucket = 'watch';
   if (ov === 'paused' && bucket === 'watch') { bucket = 'paused'; back = false; }
@@ -567,6 +631,7 @@ function render() {
 
   paintWatch(groups.watch);
   paint('gridSoon', groups.soon, 'cSoon', true);
+  const nuove = paintNuove();
   paint('gridWaiting', groups.waiting, 'cWaiting', true);
   paint('gridPaused', groups.paused, 'cPaused', true);
   paint('gridStart', groups.start, 'cStart', true);
@@ -574,6 +639,7 @@ function render() {
 
   show('#emptyWatch', groups.watch.length === 0);
   show('#secSoon', groups.soon.length > 0);
+  show('#secNuove', nuove > 0);
   show('#secWaiting', groups.waiting.length > 0);
   show('#secPaused', groups.paused.length > 0);
   show('#secStart', groups.start.length > 0);
@@ -640,6 +706,82 @@ function splitBands(list) {
     { label: 'Questo mese', items: b[2] },
     { label: 'Più indietro', items: b[3] }
   ];
+}
+
+/* Le stagioni nuove segnalate dal calendario: non sono voci della libreria,
+   quindi hanno una card tutta loro con il pulsante per toglierle di mezzo. */
+function paintNuove() {
+  const q = ui.search.trim().toLowerCase();
+  const lista = (S.nuove || []).filter(x =>
+    !S.nascoste[x.id] &&
+    (S.settings.type === 'all' || S.settings.type === x.tipo) &&
+    (!q || decodifica(x.title).toLowerCase().includes(q) || decodifica(x.da).toLowerCase().includes(q))
+  );
+
+  const grid = $('#gridNuove');
+  $('#cNuove').textContent = lista.length;
+  grid.replaceChildren();
+  const frag = document.createDocumentFragment();
+  for (const x of lista) frag.appendChild(cardNuova(x));
+  grid.appendChild(frag);
+  return lista.length;
+}
+
+function cardNuova(x) {
+  const kind = x.tipo === 'anime' ? 'anime' : 'tv';
+  const nome = decodifica(x.title);
+
+  const el = document.createElement('a');
+  el.className = 'card';
+  el.href = `https://simkl.com/${kind}/${x.id}/${x.slug}`;
+  el.target = '_blank';
+  el.rel = 'noopener';
+  el.title = nome;
+
+  const poster = document.createElement('div');
+  poster.className = 'poster';
+  if (x.poster) {
+    const img = document.createElement('img');
+    img.loading = 'lazy'; img.decoding = 'async'; img.alt = '';
+    img.src = `${CFG.img}${x.poster}_ca.webp&q=90`;
+    poster.appendChild(img);
+  } else {
+    const f = document.createElement('div');
+    f.className = 'poster-fallback';
+    f.textContent = nome;
+    poster.appendChild(f);
+  }
+  poster.appendChild(badge('badge-soon', when(x.t)));
+
+  const b = document.createElement('button');
+  b.className = 'card-act';
+  b.textContent = 'nascondi';
+  b.title = 'Non segnalarmela più';
+  b.onclick = ev => {
+    ev.preventDefault(); ev.stopPropagation();
+    S.nascoste[x.id] = true;
+    save(); render();
+  };
+  poster.appendChild(b);
+
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  const t = document.createElement('div');
+  t.className = 'title';
+  t.textContent = nome;
+  meta.appendChild(t);
+  const sub = document.createElement('div');
+  sub.className = 'sub';
+  sub.textContent = x.episode != null ? `Ep. ${x.episode} · ${when(x.t)}` : when(x.t);
+  meta.appendChild(sub);
+  const da = document.createElement('div');
+  da.className = 'ep';
+  da.textContent = 'segui: ' + decodifica(x.da);
+  meta.appendChild(da);
+
+  el.appendChild(poster);
+  el.appendChild(meta);
+  return el;
 }
 
 function paint(gridId, list, countId, small) {
@@ -822,7 +964,8 @@ function openSettings() {
 }
 
 function logout(msg) {
-  S = { token: null, act: null, lib: {}, meta: {}, cal: {}, calAt: 0, det: {}, lastSync: 0, settings: S.settings };
+  S = { token: null, act: null, lib: {}, meta: {}, cal: {}, calAt: 0, det: {},
+        nuove: [], nascoste: S.nascoste || {}, lastSync: 0, settings: S.settings };
   save();
   show('#app', false);
   show('#settings', false);

@@ -45,9 +45,10 @@ servire i file vecchi mentre lavori.
 |---|---|
 | **Da guardare ora** | Episodi usciti e non ancora visti. È la schermata principale. |
 | **In arrivo** | Sei in pari e c'è già una data per il prossimo episodio. |
+| **Stagioni nuove che non hai** | Stanno uscendo, sembrano seguiti di roba che segui, ma su Simkl non ce le hai. |
 | **In attesa** | Sei in pari, ma la data non è ancora stata annunciata. |
 | **In pausa** | Hanno arretrati, ma sei fermo da troppo tempo. |
-| **Da iniziare** | Il tuo "Plan to watch". |
+| **Da iniziare** | Il tuo "Plan to watch", più le serie che hai in lista ma non hai mai aperto. |
 | **Archivio** | Completate e abbandonate senza novità. |
 
 Tutte tranne la prima sono chiuse: si aprono con un clic sul titolo.
@@ -109,6 +110,34 @@ Poi decide dove metterlo:
 Con zero arretrati non finisce **mai** in pausa: non c'è niente da recuperare.
 E una serie che hai abbandonato non compare mai tra quelle in attesa o in arrivo:
 non stai aspettando niente.
+
+**Zero episodi visti** non vuol dire "messa in pausa": vuol dire mai cominciata.
+Quelle vanno in *Da iniziare*, non in *In pausa*. Se però è appena uscita resta in
+griglia, come qualunque altra cosa fresca.
+
+### Stagioni nuove che non hai in libreria
+
+Su Simkl ogni stagione di un anime è spesso una **voce separata**, e il tracker
+automatico la aggiunge solo quando ne guardi un episodio. Finché non lo fai, la
+stagione nuova per la dashboard non esiste: legge le tue liste, e lì non c'è.
+
+Per pescarla lo stesso, la dashboard confronta il calendario dei prossimi 33 giorni
+con quello che hai già. Se sta uscendo un titolo che non hai ma che ha la stessa
+radice di uno che segui, te lo segnala:
+
+```
+Bleach: Sennen Kessen Hen - Kashin Tan   →  radice "bleach"  →  ce l'hai: Bleach
+```
+
+La radice si ricava tagliando il sottotitolo dopo i due punti e togliendo in coda
+le parole di stagione e i numeri, romani compresi.
+
+**È un confronto sui nomi, non su un collegamento ufficiale.** Simkl non espone il
+legame fra le stagioni di una stessa serie. Sugli anime funziona bene perché il
+prefisso resta uguale, ma qualche accostamento sbagliato ci sarà: su ogni
+segnalazione c'è il pulsante **nascondi**, e quella non torna più.
+
+Il calendario è un file pubblico su CDN: non consuma quota API.
 
 ### Quando i contatori di Simkl sbagliano
 
