@@ -28,6 +28,7 @@ const DEFAULTS = {
   abandonDays: 365,
   showDropped: true,
   enTitles: true,
+  aperte: null,        // quali sezioni tieni aperte; null = come le trova all'inizio
   autoRefresh: true,
   sort: 'recent',
   type: 'all'
@@ -878,9 +879,10 @@ function card(a, small) {
   else sub.textContent = show_.year ? String(show_.year) : '';
   meta.appendChild(sub);
 
-  // il titolo dell'episodio, solo nella griglia grande dove c'è spazio
+  /* Il titolo dell'episodio, solo nella griglia grande dove c'è spazio.
+     Se ripete soltanto il numero ("Episode 8") non aggiunge niente a "Ep. 8": lo salto. */
   const epTitle = e.next_to_watch_info?.title;
-  if (!small && epTitle) {
+  if (!small && epTitle && !/^(episode|episodio|ep\.?)\s*\d+$/i.test(epTitle.trim())) {
     const ep = document.createElement('div');
     ep.className = 'ep';
     ep.textContent = epTitle;
@@ -973,6 +975,16 @@ function logout(msg) {
   if (msg) loginError(msg);
 }
 
+// Le sezioni restano come le hai lasciate l'ultima volta.
+function applicaSezioni() {
+  const scelte = S.settings.aperte;
+  if (!scelte) return;
+  for (const sez of document.querySelectorAll('.collapsible')) {
+    if (scelte[sez.id] === undefined) continue;
+    sez.classList.toggle('closed', !scelte[sez.id]);
+  }
+}
+
 /* ---------------- avvio ---------------- */
 
 function wire() {
@@ -1024,7 +1036,13 @@ function wire() {
   $('#btnExport').onclick = exportSettings;
 
   for (const h of document.querySelectorAll('.block-title.toggle')) {
-    h.onclick = () => h.closest('.collapsible').classList.toggle('closed');
+    h.onclick = () => {
+      const sez = h.closest('.collapsible');
+      sez.classList.toggle('closed');
+      if (!S.settings.aperte) S.settings.aperte = {};
+      S.settings.aperte[sez.id] = !sez.classList.contains('closed');
+      save();
+    };
   }
 
   // aggiorno quando torno sulla scheda, non con un timer cieco in sottofondo
@@ -1060,6 +1078,7 @@ async function boot() {
   }
   show('#login', false);
   show('#app', true);
+  applicaSezioni();
 
   if (Object.keys(S.lib).length) { await refreshCalendar(); render(); }
   updateSyncInfo();

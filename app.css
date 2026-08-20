@@ -119,7 +119,13 @@ html, body {
   background: rgba(14, 17, 22, .92);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
-  padding: 12px clamp(12px, 3vw, 28px) 10px;
+  padding: 12px 0 10px;
+}
+
+.topbar-inner {
+  max-width: 1760px;
+  margin: 0 auto;
+  padding: 0 clamp(12px, 3vw, 28px);
 }
 
 .topbar-row { display: flex; align-items: center; gap: 10px; }
@@ -137,7 +143,7 @@ html, body {
   border-radius: 9px;
   padding: 8px 12px;
 }
-.search { flex: 1 1 180px; min-width: 140px; }
+.search { flex: 0 1 300px; min-width: 140px; }
 .search:focus, .select:focus { outline: none; border-color: var(--accent); }
 
 .chips { display: flex; gap: 6px; }
@@ -156,7 +162,11 @@ html, body {
 
 /* ---------------- blocchi ---------------- */
 
-main { padding: 20px clamp(12px, 3vw, 28px) 80px; }
+main {
+  max-width: 1760px;
+  margin: 0 auto;
+  padding: 20px clamp(12px, 3vw, 28px) 80px;
+}
 
 .block { margin-bottom: 34px; }
 
@@ -193,12 +203,14 @@ main { padding: 20px clamp(12px, 3vw, 28px) 80px; }
 
 /* ---------------- griglia ---------------- */
 
+/* Allargando lo schermo devono crescere le CARD, non il numero di colonne:
+   su un monitor da 2500px tredici miniature da 176px non le legge nessuno. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
-  gap: 20px 16px;
+  grid-template-columns: repeat(auto-fill, minmax(216px, 1fr));
+  gap: 26px 20px;
 }
-.grid-sm { grid-template-columns: repeat(auto-fill, minmax(126px, 1fr)); gap: 16px 12px; }
+.grid-sm { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px 14px; }
 
 .card { position: relative; display: block; color: inherit; text-decoration: none; }
 
@@ -355,8 +367,13 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 20px 0; }
 }
 
 @media (max-width: 560px) {
-  .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px 12px; }
-  .grid-sm { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 18px 12px; }
+  .grid-sm { grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); }
   .brand { font-size: 18px; }
-  .card-act { opacity: 1; }
+
+  /* Sul telefono il pulsante è sempre visibile: la pastiglia del tipo starebbe
+     sotto e le due si accavallano. Il tipo lo dicono già i filtri in alto. */
+  .card-act { opacity: 1; font-size: 10.5px; padding: 3px 6px; }
+  .badge-type { display: none; }
+  .search { flex: 1 1 100%; }
 }
