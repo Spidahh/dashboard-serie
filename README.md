@@ -54,6 +54,21 @@ servire i file vecchi mentre lavori.
 Tutte tranne la prima sono chiuse: si aprono con un clic sul titolo, e restano
 come le lasci anche dopo aver ricaricato.
 
+### La riga in testata
+
+Sotto al titolo c'è il dato che riassume tutto: **quanti episodi ti aspettano, su
+quante serie**, e quanti sono appena usciti. È la riga da leggere aprendo la pagina.
+
+### Scorciatoie
+
+| Tasto | Cosa fa |
+|---|---|
+| `/` | porta il cursore nella ricerca |
+| `Esc` | svuota la ricerca, o chiude le impostazioni |
+
+Ogni voce del menù, ogni pastiglia sul poster e ogni pulsante hanno una spiegazione
+che compare passandoci sopra il mouse.
+
 ### Il menù a sinistra
 
 Ogni voce porta il suo conteggio. Cliccandola **la pagina mostra solo quella

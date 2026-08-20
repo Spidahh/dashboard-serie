@@ -667,9 +667,37 @@ function render() {
   }
   show('#emptyWatch', (pieno || v === 'watch') && groups.watch.length === 0);
 
+  const VUOTE = {
+    soon: 'Nessuna serie con una data già fissata.',
+    nuove: 'Nessuna stagione nuova in uscita fra quelle che segui.',
+    waiting: 'Nessuna serie in attesa di una data.',
+    paused: 'Niente in pausa: non hai serie lasciate a metà.',
+    start: 'Niente da iniziare.',
+    archive: "L'archivio è vuoto."
+  };
+  const vuotaVista = !pieno && v !== 'watch' && !conteggi[v];
+  const eV = $('#emptyVista');
+  if (eV) eV.textContent = vuotaVista ? (VUOTE[v] || "Qui non c'è niente.") +
+    (ui.search.trim() ? ' Prova a svuotare la ricerca.' : '') : '';
+  show('#emptyVista', vuotaVista);
+
 
   const tot = Object.keys(S.lib).length;
   const arretrati = groups.watch.reduce((s, a) => s + a.backlog, 0);
+  const oggi = groups.watch.filter(a => a.airedAt && Date.now() - a.airedAt <= 2 * DAY)
+                           .reduce((s, a) => s + a.backlog, 0);
+
+  const sub = $('#brandSub');
+  if (sub) {
+    if (!arretrati) sub.textContent = "Sei in pari: non c'è niente da recuperare.";
+    else {
+      const ep = arretrati === 1 ? '1 episodio' : arretrati + ' episodi';
+      const se = groups.watch.length === 1 ? '1 serie' : groups.watch.length + ' serie';
+      sub.innerHTML = `<b>${escapeHtml(ep)}</b> da vedere, su ${escapeHtml(se)}` +
+        (oggi ? ` · <span class="oggi">${oggi === 1 ? '1 appena uscito' : oggi + ' appena usciti'}</span>` : '');
+    }
+  }
+
   $('#statsLine').textContent = `${tot} titoli in libreria · ${arretrati} episodi arretrati da vedere`;
   document.title = arretrati ? `(${arretrati}) Dashboard Serie` : 'Dashboard Serie';
 }
@@ -863,6 +891,9 @@ function card(a, small) {
     const b = document.createElement('button');
     b.className = 'card-act';
     b.textContent = a.bucket === 'watch' ? 'in pausa' : 'riprendi';
+    b.title = a.bucket === 'watch'
+      ? 'Togli questa serie dalla schermata principale. Vale solo qui: su Simkl non cambia niente.'
+      : 'Rimettila fra quelle da guardare. Vale solo qui: su Simkl non cambia niente.';
     b.onclick = ev => {
       ev.preventDefault(); ev.stopPropagation();
       const m = S.meta[a.key] || (S.meta[a.key] = {});
@@ -895,7 +926,9 @@ function card(a, small) {
     if (!lbl && a.backlog > 0) lbl = a.backlog === 1 ? '1 episodio nuovo' : a.backlog + ' episodi nuovi';
     date = a.bucket === 'soon' ? a.upcomingAt : a.airedAt;
   }
-  if (lbl && date) sub.innerHTML = `<b>${escapeHtml(lbl)}</b> ${escapeHtml(when(date))}`;
+  // "uscito" / "esce" evita il dubbio fra quando è uscito l'episodio e quando l'hai visto tu
+  const verbo = a.bucket === 'soon' ? 'esce ' : (a.bucket === 'waiting' ? '' : 'uscito ');
+  if (lbl && date) sub.innerHTML = `<b>${escapeHtml(lbl)}</b> ${escapeHtml(verbo + when(date))}`;
   else if (lbl) sub.textContent = lbl;
   else if (date) sub.textContent = when(date);
   else sub.textContent = show_.year ? String(show_.year) : '';
@@ -916,10 +949,20 @@ function card(a, small) {
   return el;
 }
 
-function badge(cls, txt) {
+const SPIEGA_PASTIGLIA = {
+  'badge-count': 'Quanti episodi usciti non hai ancora visto',
+  'badge-new': 'Un episodio solo, uscito negli ultimi 7 giorni',
+  'badge-back': 'Era ferma da un pezzo, ma è uscita roba nuova',
+  'badge-soon': 'Quando esce il prossimo episodio',
+  'badge-type': 'È un anime'
+};
+
+function badge(cls, txt, spiega) {
   const b = document.createElement('span');
   b.className = 'badge ' + cls;
   b.textContent = txt;
+  const t = spiega || SPIEGA_PASTIGLIA[cls];
+  if (t) b.title = t;
   return b;
 }
 
@@ -1014,7 +1057,9 @@ function updateSyncInfo() {
   if (!el) return;
   if (!S.lastSync) { el.textContent = ''; return; }
   const min = Math.round((Date.now() - S.lastSync) / 60e3);
-  el.textContent = min < 1 ? 'aggiornato ora' : min < 60 ? `agg. ${min} min fa` : 'agg. ' + when(S.lastSync);
+  el.textContent = min < 1 ? 'aggiornato ora'
+    : min < 60 ? `aggiornato ${min} min fa`
+    : 'aggiornato ' + when(S.lastSync);
 }
 
 /* ---------------- impostazioni ---------------- */
@@ -1123,6 +1168,25 @@ function wire() {
       save();
     };
   }
+
+  /* Scorciatoie: "/" porta nella ricerca, Esc la svuota. */
+  document.addEventListener('keydown', ev => {
+    const dentroUnCampo = /^(INPUT|TEXTAREA|SELECT)$/.test(ev.target.tagName);
+    if (ev.key === '/' && !dentroUnCampo && !ev.ctrlKey && !ev.metaKey) {
+      ev.preventDefault();
+      $('#search').focus();
+      $('#search').select();
+    } else if (ev.key === 'Escape') {
+      if (!$('#settings').classList.contains('hidden')) return show('#settings', false);
+      if (ui.search) {
+        $('#search').value = '';
+        ui.search = '';
+        applicaSezioni();
+        render();
+        $('#search').blur();
+      }
+    }
+  });
 
   // aggiorno quando torno sulla scheda, non con un timer cieco in sottofondo
   document.addEventListener('visibilitychange', () => {
