@@ -60,8 +60,15 @@ quante serie**, e quanti sono appena usciti. È la riga da leggere aprendo la pa
 
 ### Ordinamento e filtri
 
-L'ordinamento scelto vale per **tutte** le sezioni, non solo per la prima: cambiando
-"Ordina" si riordina anche l'Archivio, la Pausa e il resto.
+**Tipo** e **ricerca** restringono tutta la libreria, non solo la sezione che stai
+guardando. Perciò cambiano anche i numeri nel menù: con "Anime" acceso, *In pausa*
+passa da 99 a 10 perché sta contando i soli anime.
+
+Quando un filtro è acceso compare una fascia azzurra che lo dice, con il pulsante
+**Mostra tutto** per toglierlo.
+
+**Ordina** invece non toglie niente: cambia solo l'ordine. Vale per **tutte** le
+sezioni, non solo per la prima.
 
 In *In pari* l'ordine predefinito mette davanti le serie con una data, dalla più
 vicina; quelle senza data vanno in fondo.

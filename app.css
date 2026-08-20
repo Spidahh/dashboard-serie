@@ -288,6 +288,36 @@ main { min-width: 0; }
 .collapsible.closed .grid,
 .collapsible.closed .hint { display: none; }
 
+/* Quando un filtro è acceso deve vedersi: altrimenti i numeri nel menù
+   cambiano e sembra che si sia rotto qualcosa. */
+.filtro-attivo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 0 0 22px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  color: var(--txt);
+  background: rgba(76, 141, 255, .1);
+  border: 1px solid rgba(76, 141, 255, .35);
+  border-radius: 10px;
+}
+.filtro-attivo b { color: var(--accent); }
+
+.btn-lino {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  padding: 0;
+  cursor: pointer;
+}
+.btn-lino:hover { color: var(--txt); }
+
 .hint { margin: -6px 0 14px; font-size: 13px; color: var(--txt-2); }
 
 .empty { color: var(--txt-2); padding: 8px 2px; }

@@ -654,6 +654,7 @@ function render() {
     paused: groups.paused.length, start: groups.start.length, archive: groups.archive.length
   };
   aggiornaMenu(conteggi, groups.watch);
+  avvisoFiltro(q);
 
   // La vista decide cosa resta in pagina: "tutto" oppure una sola sezione.
   const v = S.settings.vista || 'tutto';
@@ -1053,6 +1054,36 @@ function aggiornaMenu(conteggi, watch) {
   }
 }
 
+/* I filtri in alto restringono TUTTA la libreria, quindi cambiano anche i numeri
+   nel menù. È giusto che sia così, ma va detto: senza avviso sembra un guasto. */
+const NOME_TIPO = { shows: 'le serie TV', anime: 'gli anime' };
+
+function avvisoFiltro(q) {
+  const box = $('#filtroAttivo');
+  if (!box) return;
+  const tipo = S.settings.type !== 'all' ? NOME_TIPO[S.settings.type] : null;
+  const cerca = q ? q : null;
+  if (!tipo && !cerca) return show(box, false);
+
+  let t = '';
+  if (tipo && cerca) t = `Stai cercando <b>${escapeHtml(cerca)}</b> fra <b>${tipo}</b>.`;
+  else if (tipo) t = `Stai vedendo solo <b>${tipo}</b>.`;
+  else t = `Stai cercando <b>${escapeHtml(cerca)}</b>.`;
+
+  $('#filtroTesto').innerHTML = t + ' Anche i numeri nel menù contano solo questi.';
+  show(box, true);
+}
+
+function azzeraFiltri() {
+  S.settings.type = 'all';
+  for (const c of $('#typeChips').children) c.classList.toggle('on', c.dataset.type === 'all');
+  ui.search = '';
+  $('#search').value = '';
+  applicaSezioni();
+  save();
+  render();
+}
+
 function cambiaVista(v) {
   S.settings.vista = v;
   for (const b of document.querySelectorAll('.nav-item')) b.classList.toggle('on', b.dataset.vista === v);
@@ -1178,6 +1209,8 @@ function wire() {
   };
 
   $('#sort').onchange = ev => { S.settings.sort = ev.target.value; save(); render(); };
+
+  $('#filtroReset').onclick = azzeraFiltri;
 
   $('#nav').onclick = ev => {
     const b = ev.target.closest('.nav-item');

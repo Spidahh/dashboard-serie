@@ -8,7 +8,7 @@
 <link rel="icon" href="icon.svg">
 <link rel="manifest" href="manifest.webmanifest">
 <!-- il numero di versione sale a ogni modifica: senza, il browser continua a servire i file vecchi -->
-<link rel="stylesheet" href="app.css?v=11">
+<link rel="stylesheet" href="app.css?v=12">
 </head>
 <body>
 
@@ -92,6 +92,12 @@
    </nav>
 
    <main>
+    <!-- AVVISO DEL FILTRO ATTIVO -->
+    <div class="filtro-attivo hidden" id="filtroAttivo">
+      <span id="filtroTesto"></span>
+      <button class="btn-lino" id="filtroReset">Mostra tutto</button>
+    </div>
+
     <!-- DA GUARDARE ORA -->
     <section class="block" id="secWatch">
       <h2 class="block-title">Da guardare ora <span class="count" id="cWatch">0</span></h2>
@@ -199,6 +205,6 @@
   </div>
 </div>
 
-<script src="app.js?v=11"></script>
+<script src="app.js?v=12"></script>
 </body>
 </html>
