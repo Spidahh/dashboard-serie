@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1116">
+<title>Film · Dashboard Serie</title>
+<link rel="icon" href="icon.svg">
+<link rel="manifest" href="manifest.webmanifest">
+<!-- il numero di versione va tenuto uguale in tutte le pagine e in sw.js -->
+<link rel="stylesheet" href="app.css?v=22">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-row">
+      <a class="marchio" href="index.html">
+        <img src="icon.svg" alt="" width="26" height="26">
+        <span class="marchio-nome" data-t="app.nome"></span>
+      </a>
+      <nav class="spazi">
+        <a href="anime.html" data-spazio="anime" data-t="nav.anime"></a>
+        <a href="serie.html" data-spazio="serie" data-t="nav.serie"></a>
+        <a href="film.html" data-spazio="film" data-t="nav.film"></a>
+      </nav>
+      <span class="spacer"></span>
+      <span id="syncInfo" class="sync-info"></span>
+      <button id="btnSync" class="icon-btn" data-t-attr="title:ctrl.aggiorna">&#8635;</button>
+      <span class="lingua-switch">
+        <button data-lingua="it">IT</button><button data-lingua="en">EN</button>
+      </span>
+      <a class="icon-btn" href="impostazioni.html" data-t-attr="title:nav.impostazioni">&#9881;</a>
+    </div>
+
+    <div class="topbar-row">
+      <div class="brand-box">
+        <h1 class="brand" data-t="nav.film"></h1>
+        <p class="brand-sub" id="brandSub"></p>
+      </div>
+      <span class="spacer"></span>
+      <input id="cerca" class="search" type="search" autocomplete="off"
+             data-t-attr="placeholder:ctrl.cerca;title:ctrl.cercaAiuto">
+      <span class="campo">
+        <span class="campo-eti" data-t="ctrl.ordina"></span>
+        <select id="ordina" class="select" data-t-attr="title:ctrl.ordinaAiuto"></select>
+      </span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav"></nav>
+  <main id="main"></main>
+</div>
+
+<script src="js/lingua.js?v=22"></script>
+<script src="js/stato.js?v=22"></script>
+<script src="js/fonti.js?v=22"></script>
+<script src="js/regole.js?v=22"></script>
+<script src="js/carte.js?v=22"></script>
+<script src="js/telaio.js?v=22"></script>
+<script src="js/spazio.js?v=22"></script>
+<script>avviaSpazio('film');</script>
+</body>
+</html>

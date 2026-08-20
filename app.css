@@ -34,40 +34,63 @@ html, body {
 .spacer { flex: 1; }
 .err { color: var(--hot); }
 
-/* ---------------- login ---------------- */
+/* ---------------- pagine di testo: home, impostazioni, guida ---------------- */
 
-.login {
-  min-height: 100dvh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
+.pagina-centro {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px clamp(16px, 4vw, 32px) 90px;
+}
+.pagina-centro.stretta { max-width: 720px; }
+
+.hero { margin-bottom: 54px; }
+.hero h1, .hero-t { margin: 0 0 14px; font-size: clamp(28px, 5vw, 40px); letter-spacing: -.025em; }
+.hero-sotto { margin: 0 0 26px; font-size: 16.5px; line-height: 1.6; color: var(--txt-2); max-width: 60ch; }
+.hero-azioni { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.hero-azioni .btn { width: auto; margin: 0; }
+.hero-avviso {
+  flex: 1 1 100%;
+  margin: 0 0 4px;
+  font-size: 14px;
+  color: var(--warm);
 }
 
-.login-box {
-  width: min(460px, 100%);
+.sezione { margin-bottom: 48px; }
+.sezione-t { margin: 0 0 8px; font-size: 19px; letter-spacing: -.01em; }
+.sezione-d { margin: 0 0 18px; font-size: 14.5px; line-height: 1.6; color: var(--txt-2); max-width: 65ch; }
+.sezione-d a { color: var(--accent); }
+
+/* le tre carte degli spazi, nella home */
+.spazi-carte { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+.spazio-carta {
+  display: block;
+  padding: 20px;
+  color: inherit;
+  text-decoration: none;
   background: var(--bg-2);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 32px;
-  text-align: center;
-  box-shadow: var(--shadow);
+  transition: border-color .15s, transform .15s, background .15s;
 }
+.spazio-carta:hover { border-color: var(--accent); background: var(--bg-3); transform: translateY(-2px); }
+.spazio-carta h3 { margin: 0 0 10px; font-size: 16px; }
+.spazio-carta p { margin: 10px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--txt-2); }
+.spazio-n {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.spazio-n span { font-size: 13.5px; font-weight: 600; color: var(--txt-2); }
+.spazio-n.vuoto { font-size: 15px; font-weight: 600; color: var(--txt-2); }
 
-.login-box h1 { margin: 0 0 10px; font-size: 27px; letter-spacing: -.02em; }
-.login-occhiello { margin: 0 0 22px; font-size: 14.5px; color: var(--txt-2); line-height: 1.55; }
-.login-serve {
-  margin: 0 0 18px;
-  font-size: 14px;
-  color: var(--txt-2);
-  line-height: 1.55;
-  text-align: left;
-  background: var(--bg-3);
-  border-radius: 10px;
-  padding: 13px 15px;
-}
-.login-serve b { color: var(--txt); }
-.login-guida { display: inline-block; margin-top: 14px; font-size: 13.5px; color: var(--accent); text-decoration: none; }
-.login-guida:hover { color: var(--txt); text-decoration: underline; }
+/* i tre punti del "come funziona" */
+.punti { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 22px; }
+.punto h3 { margin: 0 0 7px; font-size: 15px; }
+.punto p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--txt-2); }
+
+/* ---------------- il codice da scrivere sull'altro sito ---------------- */
 
 .login-passo { display: flex; align-items: center; justify-content: center; gap: 9px; margin: 0 0 8px; font-size: 14.5px; }
 .login-n {
@@ -77,11 +100,10 @@ html, body {
   background: var(--accent); border-radius: 50%;
 }
 
-.login-privacy { margin: 22px 0 0; font-size: 12.5px; color: #6d7a8d; line-height: 1.5; }
-
 .pin-code {
   font: 700 40px/1.2 ui-monospace, "Cascadia Mono", Consolas, monospace;
   letter-spacing: .18em;
+  text-align: center;
   background: var(--bg-3);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -91,7 +113,8 @@ html, body {
 }
 
 .pin-url {
-  display: inline-block;
+  display: block;
+  text-align: center;
   font-size: 19px;
   font-weight: 600;
   color: var(--accent);
@@ -118,9 +141,9 @@ html, body {
 .btn-ghost { background: transparent; }
 .btn-danger { color: var(--hot); border-color: #4a2733; background: transparent; }
 .btn-alt { width: 100%; margin-top: 8px; background: transparent; }
+.btn-largo { display: block; width: 100%; margin-top: 8px; text-align: center; text-decoration: none; }
 .btn-piccolo { font-size: 13px; padding: 6px 12px; flex: none; }
 
-.settings-h3 { margin: 0 0 12px; font-size: 15px; }
 .servizi { display: flex; flex-direction: column; gap: 10px; }
 .servizio {
   display: flex;
@@ -182,16 +205,67 @@ html, body {
 .modal-intro { margin: -8px 0 20px; font-size: 13.5px; color: var(--txt-2); }
 
 .topbar-row { display: flex; align-items: center; gap: 10px; }
+
+/* Il marchio riporta sempre alla home: era proprio quello che mancava, una
+   porta per tornare al benvenuto dopo la prima volta. */
+.marchio {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  color: var(--txt);
+  text-decoration: none;
+  flex: none;
+}
+.marchio img { display: block; border-radius: 7px; }
+.marchio:hover { color: var(--accent); }
+
+/* I tre spazi, sempre a portata di clic da qualunque pagina */
+.spazi { display: flex; gap: 4px; flex: none; }
+.spazi a {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--txt-2);
+  text-decoration: none;
+  padding: 7px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+  transition: background .13s, color .13s;
+}
+.spazi a:hover { color: var(--txt); background: var(--bg-2); }
+.spazi a.on { color: #fff; background: var(--accent); }
+
+/* Cambio lingua: due lettere, sempre visibili. Nascosto dentro alle
+   impostazioni non lo avrebbe trovato nessuno. */
+.lingua-switch {
+  display: inline-flex;
+  flex: none;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden;
+}
+.lingua-switch button {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--txt-2);
+  background: transparent;
+  border: 0;
+  padding: 9px 9px;
+  cursor: pointer;
+}
+.lingua-switch button:hover { color: var(--txt); background: var(--bg-3); }
+.lingua-switch button.on { color: #fff; background: var(--accent); }
+
+.icon-btn.on { color: var(--txt); background: var(--bg-3); border-color: var(--accent); }
 .topbar-row + .topbar-row { margin-top: 10px; }
 .brand { margin: 0; font-size: 21px; letter-spacing: -.01em; }
 .sync-info { font-size: 12.5px; color: var(--txt-2); white-space: nowrap; }
 
-/* I controlli restano vicini fra loro e leggibili insieme: su uno schermo largo
-   spingerli ai due estremi li allontanava troppo. Un filetto separa i gruppi. */
-.controls { flex-wrap: wrap; gap: 10px 16px; }
-.controls .campo + .campo,
-.controls .campo:first-of-type { padding-left: 16px; border-left: 1px solid var(--line); }
-#sort { min-width: 240px; }
+#ordina { min-width: 210px; }
 
 .search, .select {
   font: inherit;
@@ -201,7 +275,7 @@ html, body {
   border-radius: 9px;
   padding: 8px 12px;
 }
-.search { flex: 0 1 300px; min-width: 140px; }
+.search { flex: 0 1 280px; min-width: 140px; }
 .search:focus, .select:focus { outline: none; border-color: var(--accent); }
 
 .chips { display: flex; gap: 6px; }
@@ -239,7 +313,7 @@ main { min-width: 0; }
 /* la navigazione resta ferma mentre scorri */
 .nav {
   position: sticky;
-  top: 104px;
+  top: 118px;
   align-self: start;
   display: flex;
   flex-direction: column;
@@ -441,6 +515,7 @@ main { min-width: 0; }
 .sub { margin-top: 3px; font-size: 12px; color: var(--txt-2); }
 .sub b { color: var(--accent); font-weight: 600; }
 .sub b.fatto { color: var(--ok); }
+.sub b.lasciato { color: var(--txt-2); }
 
 .ep {
   margin-top: 2px;
@@ -549,7 +624,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 20px 0; }
 
   .nav {
     position: sticky;
-    top: 96px;
+    top: 110px;
     z-index: 15;
     flex-direction: row;
     gap: 6px;
@@ -580,11 +655,20 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 20px 0; }
 
 }
 
-@media (max-width: 760px) {
-  /* sul telefono la barra dei filtri va a capo: niente separatori verticali */
-  .controls .campo + .campo,
-  .controls .campo:first-of-type { padding-left: 0; border-left: 0; }
-  #sort { min-width: 0; flex: 1; }
+@media (max-width: 900px) {
+  /* Sullo stretto la testata deve stare in due righe senza schiacciare niente:
+     il nome del sito lo dice gia' l'icona, e la riga dei controlli va a capo. */
+  .marchio-nome { display: none; }
+  .topbar-row { flex-wrap: wrap; }
+  .search { flex: 1 1 100%; order: 3; }
+  #ordina { min-width: 0; flex: 1; }
+  .campo { flex: 1 1 auto; }
+  .brand-box { flex: 1 1 100%; }
+}
+
+@media (max-width: 560px) {
+  .spazi a { padding: 7px 10px; font-size: 13px; }
+  .lingua-switch button { padding: 8px 7px; }
 }
 
 @media (max-width: 560px) {
@@ -604,28 +688,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 20px 0; }
    Pagina della guida
    ================================================================ */
 
-.pagina { padding: 0; }
-
-.guida-top {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: rgba(14, 17, 22, .93);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--line);
-  padding: 14px clamp(16px, 4vw, 32px);
-}
-.guida-back { color: var(--txt-2); text-decoration: none; font-size: 14px; font-weight: 600; }
-.guida-back:hover { color: var(--txt); }
-
-.guida {
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 36px clamp(16px, 4vw, 32px) 90px;
-  line-height: 1.6;
-}
-
-.guida h1 { margin: 0 0 18px; font-size: 32px; letter-spacing: -.02em; }
+.guida { line-height: 1.6; }
 .guida-occhiello { margin: 0 0 14px; font-size: 16px; color: var(--txt-2); }
 .guida-occhiello b { color: var(--txt); }
 
@@ -684,5 +747,4 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 20px 0; }
 @media (max-width: 560px) {
   .riga { grid-template-columns: 1fr; }
   .cella-t { border-bottom: 1px solid var(--line); }
-  .guida h1 { font-size: 26px; }
 }

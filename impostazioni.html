@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1116">
+<title>Impostazioni · Dashboard Serie</title>
+<link rel="icon" href="icon.svg">
+<link rel="manifest" href="manifest.webmanifest">
+<!-- il numero di versione va tenuto uguale in tutte le pagine e in sw.js -->
+<link rel="stylesheet" href="app.css?v=22">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner topbar-row">
+    <a class="marchio" href="index.html">
+      <img src="icon.svg" alt="" width="26" height="26">
+      <span data-t="app.nome"></span>
+    </a>
+    <nav class="spazi">
+      <a href="anime.html" data-spazio="anime" data-t="nav.anime"></a>
+      <a href="serie.html" data-spazio="serie" data-t="nav.serie"></a>
+      <a href="film.html" data-spazio="film" data-t="nav.film"></a>
+    </nav>
+    <span class="spacer"></span>
+    <span id="syncInfo" class="sync-info"></span>
+    <button id="btnSync" class="icon-btn hidden" data-t-attr="title:ctrl.aggiorna">&#8635;</button>
+    <span class="lingua-switch">
+      <button data-lingua="it">IT</button><button data-lingua="en">EN</button>
+    </span>
+    <a class="icon-btn on" href="impostazioni.html" data-t-attr="title:nav.impostazioni">&#9881;</a>
+  </div>
+</header>
+
+<main class="pagina-centro stretta">
+
+  <h1 class="hero-t" data-t="imp.titolo"></h1>
+  <p class="sezione-d" data-t="imp.sotto"></p>
+
+  <!-- ============ SERVIZI ============ -->
+  <section class="sezione">
+    <h2 class="sezione-t" data-t="imp.servizi"></h2>
+    <div class="servizi" id="impServizi"></div>
+  </section>
+
+  <!-- ============ LINGUA ============ -->
+  <section class="sezione">
+    <h2 class="sezione-t" data-t="imp.lingua"></h2>
+    <p class="sezione-d" data-t="imp.linguaSotto"></p>
+    <span class="chips" id="chipsLingua">
+      <button class="chip" data-lingua="it" data-t="lingua.it"></button>
+      <button class="chip" data-lingua="en" data-t="lingua.en"></button>
+    </span>
+  </section>
+
+  <!-- ============ SOGLIE ============ -->
+  <section class="sezione">
+    <h2 class="sezione-t" data-t="imp.soglie"></h2>
+    <p class="sezione-d" data-t="imp.soglieSotto"></p>
+
+    <label class="field">
+      <span id="lPause"></span>
+      <input id="sPause" type="range" min="14" max="365" step="1">
+    </label>
+
+    <label class="field">
+      <span id="lHot"></span>
+      <input id="sHot" type="range" min="14" max="365" step="1">
+      <small class="fieldnote" data-t="imp.caldaNota"></small>
+    </label>
+
+    <label class="field">
+      <span id="lAbandon"></span>
+      <input id="sAbandon" type="range" min="60" max="1460" step="5">
+      <small class="fieldnote" data-t="imp.abbandonoNota"></small>
+    </label>
+
+    <label class="field">
+      <span id="lReturn"></span>
+      <input id="sReturn" type="range" min="7" max="180" step="1">
+    </label>
+  </section>
+
+  <!-- ============ COME MOSTRARE ============ -->
+  <section class="sezione">
+    <h2 class="sezione-t" data-t="imp.scelte"></h2>
+
+    <label class="check">
+      <input id="sEnTitles" type="checkbox">
+      <span>
+        <span data-t="imp.enTitoli"></span>
+        <small class="fieldnote" data-t-html="imp.enTitoliNota"></small>
+      </span>
+    </label>
+
+    <label class="check">
+      <input id="sDropped" type="checkbox">
+      <span data-t="imp.riemergi"></span>
+    </label>
+
+    <label class="check">
+      <input id="sAutoRefresh" type="checkbox">
+      <span data-t="imp.auto"></span>
+    </label>
+  </section>
+
+  <!-- ============ MANUTENZIONE ============ -->
+  <section class="sezione">
+    <h2 class="sezione-t" data-t="imp.manutenzione"></h2>
+    <div class="settings-actions">
+      <button id="btnFullSync" class="btn btn-ghost" data-t="imp.risincronizza" data-t-attr="title:imp.risincAiuto"></button>
+      <button id="btnExport" class="btn btn-ghost" data-t="imp.esporta" data-t-attr="title:imp.esportaAiuto"></button>
+      <button id="btnImport" class="btn btn-ghost" data-t="imp.importa" data-t-attr="title:imp.importaAiuto"></button>
+      <button id="btnNascosti" class="btn btn-ghost hidden"></button>
+    </div>
+    <p class="muted small" id="statsLine"></p>
+    <div class="settings-actions">
+      <button id="btnLogout" class="btn btn-danger" data-t="imp.scollegaTutto" data-t-attr="title:imp.scollegaAiuto"></button>
+    </div>
+    <input id="fileImport" type="file" accept="application/json" class="hidden">
+  </section>
+
+  <p class="sezione-d">
+    <a href="guida.html" data-t="nav.guida"></a> ·
+    <a href="index.html" data-t="nav.torna"></a>
+  </p>
+
+</main>
+
+<script src="js/lingua.js?v=22"></script>
+<script src="js/stato.js?v=22"></script>
+<script src="js/fonti.js?v=22"></script>
+<script src="js/regole.js?v=22"></script>
+<script src="js/carte.js?v=22"></script>
+<script src="js/telaio.js?v=22"></script>
+<script src="js/impostazioni.js?v=22"></script>
+</body>
+</html>

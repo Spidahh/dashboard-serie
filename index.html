@@ -5,250 +5,91 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0e1116">
 <title>Dashboard Serie</title>
+<meta name="description" content="Gli episodi usciti che non hai ancora visto, presi dai tuoi account. Anime, serie TV e film, ognuno col suo spazio.">
 <link rel="icon" href="icon.svg">
 <link rel="manifest" href="manifest.webmanifest">
 <!-- Il numero di versione sale a ogni modifica: senza, il browser continua a
-     servire i file vecchi. Va cambiato in tre posti: qui, in guida.html e in
-     sw.js (costante VERSIONE). Se ne resta indietro uno, app.js lo segnala
-     nella console del browser. -->
-<link rel="stylesheet" href="app.css?v=17">
+     servire i file vecchi. Va cambiato in tutte le pagine e nella costante
+     VERSIONE di sw.js. Se ne resta indietro uno, il sito lo dice nella console. -->
+<link rel="stylesheet" href="app.css?v=22">
 </head>
 <body>
 
-<!-- ============ SCHERMATA LOGIN ============ -->
-<section id="login" class="login hidden">
-  <div class="login-box">
-    <h1>Cosa devi guardare</h1>
-    <p class="login-occhiello">
-      Una pagina sola con gli episodi usciti che non hai ancora visto. Quelli che guardi
-      spariscono da soli, le serie che tornano dopo anni risalgono da sole.
-    </p>
-
-    <div id="loginStep1">
-      <p class="login-serve">
-        Serve un account <b>Simkl</b>: è gratis, e segna in automatico quello che guardi
-        su Netflix, Crunchyroll e gli altri. Questa pagina legge quei dati e basta.
-      </p>
-      <button id="btnLogin" class="btn btn-big">Collega Simkl</button>
-      <button id="btnLoginAl" class="btn btn-alt">Ho AniList (solo anime)</button>
-      <button id="btnLoginTk" class="btn btn-alt">Ho Trakt (serie TV e film)</button>
-      <a class="login-guida" href="guida.html">Non ce l'ho / non so cos'è &#8594; leggi la guida</a>
-    </div>
-
-    <div id="loginStep2" class="hidden">
-      <p class="login-passo"><span class="login-n">1</span> Apri questa pagina</p>
-      <a id="pinUrl" class="pin-url" href="https://simkl.com/pin" target="_blank" rel="noopener">simkl.com/pin</a>
-      <p class="login-passo"><span class="login-n">2</span> Scrivi questo codice</p>
-      <div id="pinCode" class="pin-code">------</div>
-      <p class="muted" id="pinStatus">Aspetto che tu confermi su Simkl…</p>
-      <button id="btnCancelPin" class="btn btn-ghost">Annulla</button>
-    </div>
-
-    <p class="err hidden" id="loginErr"></p>
-
-    <p class="login-privacy">
-      I tuoi dati restano in questo browser. Non c'è nessun server che li riceve, e la
-      dashboard non scrive mai niente sul tuo account Simkl.
-    </p>
+<header class="topbar">
+  <div class="topbar-inner topbar-row">
+    <a class="marchio" href="index.html">
+      <img src="icon.svg" alt="" width="26" height="26">
+      <span data-t="app.nome"></span>
+    </a>
+    <nav class="spazi">
+      <a href="anime.html" data-spazio="anime" data-t="nav.anime"></a>
+      <a href="serie.html" data-spazio="serie" data-t="nav.serie"></a>
+      <a href="film.html" data-spazio="film" data-t="nav.film"></a>
+    </nav>
+    <span class="spacer"></span>
+    <span id="syncInfo" class="sync-info"></span>
+    <button id="btnSync" class="icon-btn hidden" data-t-attr="title:ctrl.aggiorna">&#8635;</button>
+    <span class="lingua-switch">
+      <button data-lingua="it">IT</button><button data-lingua="en">EN</button>
+    </span>
+    <a class="icon-btn" href="impostazioni.html" data-t-attr="title:nav.impostazioni">&#9881;</a>
   </div>
-</section>
+</header>
 
-<!-- ============ APP ============ -->
-<div id="app" class="hidden">
+<main class="pagina-centro">
 
-  <header class="topbar">
-   <div class="topbar-inner">
-    <div class="topbar-row">
-      <div class="brand-box">
-        <h1 class="brand">Da guardare</h1>
-        <p class="brand-sub" id="brandSub"></p>
+  <!-- ============ APERTURA ============ -->
+  <section class="hero">
+    <h1 data-t="home.titolo"></h1>
+    <p class="hero-sotto" data-t="home.sotto"></p>
+
+    <div id="heroAzioni" class="hero-azioni"></div>
+  </section>
+
+  <!-- ============ I TRE SPAZI ============ -->
+  <section class="sezione" id="sezSpazi">
+    <h2 class="sezione-t" data-t="home.spaziTitolo"></h2>
+    <p class="sezione-d" data-t="home.spaziSotto"></p>
+    <div class="spazi-carte" id="spaziCarte"></div>
+  </section>
+
+  <!-- ============ SERVIZI ============ -->
+  <section class="sezione">
+    <h2 class="sezione-t" data-t="home.serviziTitolo"></h2>
+    <p class="sezione-d" data-t="home.serviziSotto"></p>
+    <div class="servizi" id="homeServizi"></div>
+  </section>
+
+  <!-- ============ COME FUNZIONA ============ -->
+  <section class="sezione">
+    <h2 class="sezione-t" data-t="home.comeFunziona"></h2>
+    <div class="punti">
+      <div class="punto">
+        <h3 data-t="home.p1t"></h3>
+        <p data-t="home.p1d"></p>
       </div>
-      <div class="spacer"></div>
-      <span id="syncInfo" class="sync-info"></span>
-      <button id="btnSync" class="icon-btn" title="Aggiorna">&#8635;</button>
-      <button id="btnSettings" class="icon-btn" title="Impostazioni">&#9881;</button>
-    </div>
-    <div class="topbar-row controls">
-      <input id="search" class="search" type="search" placeholder="Cerca un titolo…  (premi /)"
-             autocomplete="off" title="Cerca fra tutti i tuoi titoli, anche in Archivio">
-
-      <span class="campo">
-        <span class="campo-eti">Tipo</span>
-        <span class="chips" id="typeChips">
-          <button class="chip on" data-type="all" title="Serie TV e anime insieme">Tutti</button>
-          <button class="chip" data-type="shows" title="Solo serie TV">Serie TV</button>
-          <button class="chip" data-type="anime" title="Solo anime">Anime</button>
-        </span>
-      </span>
-
-      <span class="campo">
-        <span class="campo-eti">Ordina</span>
-        <select id="sort" class="select" title="In che ordine mettere i titoli">
-          <option value="recent">Episodio uscito da meno tempo</option>
-          <option value="oldest">Episodio uscito da più tempo</option>
-          <option value="backlog">Quanti episodi arretrati</option>
-          <option value="lastwatch">Guardati di recente</option>
-          <option value="title">Titolo, dalla A alla Z</option>
-        </select>
-      </span>
-    </div>
-   </div>
-  </header>
-
-  <div class="layout">
-
-   <!-- ============ NAVIGAZIONE ============ -->
-   <nav class="nav" id="nav">
-     <button class="nav-item on" data-vista="tutto" title="Mostra tutte le categorie una sotto l'altra">Tutte le categorie</button>
-     <button class="nav-item" data-vista="watch" title="Episodi già usciti che non hai ancora visto">Da guardare ora <span class="nav-n" id="nWatch">0</span></button>
-     <div class="nav-fasce" id="navFasce"></div>
-     <button class="nav-item" data-vista="pari" title="Hai visto tutti gli episodi usciti">In pari <span class="nav-n" id="nPari">0</span></button>
-     <button class="nav-item" data-vista="nuove" title="Stagioni nuove, consigli e novità che non hai in lista">Da scoprire <span class="nav-n" id="nNuove">0</span></button>
-     <button class="nav-item" data-vista="paused" title="Hanno arretrati, ma sei fermo da troppo tempo">In pausa <span class="nav-n" id="nPaused">0</span></button>
-     <button class="nav-item" data-vista="start" title="Nella lista, ma non le hai mai aperte">Da iniziare <span class="nav-n" id="nStart">0</span></button>
-     <button class="nav-item" data-vista="archive" title="Finite o abbandonate, senza novità">Archivio <span class="nav-n" id="nArchive">0</span></button>
-   </nav>
-
-   <main>
-    <!-- AVVISO DEL FILTRO ATTIVO -->
-    <div class="filtro-attivo hidden" id="filtroAttivo">
-      <span id="filtroTesto"></span>
-      <button class="btn-lino" id="filtroReset">Mostra tutto</button>
-    </div>
-
-    <!-- DA GUARDARE ORA -->
-    <section class="block" id="secWatch">
-      <h2 class="block-title">Da guardare ora <span class="count" id="cWatch">0</span></h2>
-      <div id="watchBands"></div>
-      <p class="hint">Episodi già usciti che non hai ancora visto. Spariscono da soli quando Simkl li segna come visti.</p>
-      <p id="emptyWatch" class="empty hidden">Sei in pari: non c'è niente da recuperare.</p>
-    </section>
-
-    <!-- IN PARI -->
-    <section class="block collapsible" id="secPari">
-      <h2 class="block-title toggle">In pari <span class="count" id="cPari">0</span><span class="caret">&#9662;</span></h2>
-      <p class="hint">Hai visto tutti gli episodi usciti. Dove la data del prossimo si sa già, è scritta sul poster; dove non si sa ancora, c'è la spunta.</p>
-      <div id="gridPari" class="grid grid-sm"></div>
-    </section>
-
-    <!-- STAGIONI NUOVE NON IN LIBRERIA -->
-    <section class="block collapsible" id="secNuove">
-      <h2 class="block-title toggle">Da scoprire <span class="count" id="cNuove">0</span><span class="caret">&#9662;</span></h2>
-      <p class="hint">Roba che non hai in lista su Simkl: stagioni nuove di serie che segui, titoli consigliati da chi guarda le tue stesse cose, e novità appena partite. Se un consiglio non c'entra niente, usa <b>nascondi</b> sul poster e non torna più.</p>
-      <div id="consigliBande"></div>
-    </section>
-
-    <!-- IN PAUSA -->
-    <section class="block collapsible closed" id="secPaused">
-      <h2 class="block-title toggle" data-target="gridPaused">In pausa <span class="count" id="cPaused">0</span><span class="caret">&#9662;</span></h2>
-      <p class="hint">Hanno episodi arretrati, ma sei fermo da troppo tempo e la serie non manda in onda niente di nuovo. Se esce roba nuova tornano su da sole.</p>
-      <div id="gridPaused" class="grid grid-sm"></div>
-    </section>
-
-    <!-- DA INIZIARE -->
-    <section class="block collapsible closed" id="secStart">
-      <h2 class="block-title toggle" data-target="gridStart">Da iniziare <span class="count" id="cStart">0</span><span class="caret">&#9662;</span></h2>
-      <p class="hint">Il tuo "Plan to watch" su Simkl, più le serie che hai in lista ma non hai mai aperto.</p>
-      <div id="gridStart" class="grid grid-sm"></div>
-    </section>
-
-    <!-- ARCHIVIO -->
-    <section class="block collapsible closed" id="secArchive">
-      <h2 class="block-title toggle" data-target="gridArchive">Archivio <span class="count" id="cArchive">0</span><span class="caret">&#9662;</span></h2>
-      <p class="hint">Niente di nuovo in vista. Se una torna con episodi nuovi, la ritrovi in <b>Da guardare ora</b> con la pastiglia TORNATA.</p>
-      <div id="archivioBande"></div>
-    </section>
-
-    <p id="emptyVista" class="empty hidden"></p>
-   </main>
-
-  </div><!-- /layout -->
-
-  <div id="toast" class="toast hidden"></div>
-</div>
-
-<!-- ============ IMPOSTAZIONI ============ -->
-<div id="settings" class="modal hidden">
-  <div class="modal-box">
-    <h2>Impostazioni</h2>
-    <p class="modal-intro">Queste soglie decidono dove finisce ogni serie. Sposta un cursore e la
-    pagina dietro si riordina subito, così vedi l'effetto mentre scegli.</p>
-
-    <label class="field">
-      <span>Metti in pausa dopo <b id="vPause">60</b> giorni senza guardare</span>
-      <input id="sPause" type="range" min="14" max="365" step="1">
-    </label>
-
-    <label class="field">
-      <span>Una serie è ancora "calda" se ha mandato in onda un episodio negli ultimi <b id="vHot">90</b> giorni</span>
-      <input id="sHot" type="range" min="14" max="365" step="1">
-      <small class="fieldnote">Finché è calda resta in griglia anche se tu sei fermo da mesi: c'è ancora poco da recuperare.</small>
-    </label>
-
-    <label class="field">
-      <span>Dopo <b id="vAbandon">365</b> giorni senza guardarla la considero abbandonata</span>
-      <input id="sAbandon" type="range" min="60" max="1460" step="5">
-      <small class="fieldnote">Vale anche per le serie ancora in onda: solo un episodio davvero nuovo la riporta in griglia.</small>
-    </label>
-
-    <label class="field">
-      <span>Considera "tornata" se il nuovo episodio è uscito da meno di <b id="vReturn">45</b> giorni</span>
-      <input id="sReturn" type="range" min="7" max="180" step="1">
-    </label>
-
-    <label class="check">
-      <input id="sEnTitles" type="checkbox">
-      <span>Usa il titolo ufficiale in inglese quando esiste (<i>Tomb Raider King</i> invece di <i>Dogul Wang</i>)</span>
-    </label>
-
-    <label class="check">
-      <input id="sDropped" type="checkbox">
-      <span>Fai riemergere anche le serie completate o abbandonate quando escono episodi nuovi</span>
-    </label>
-
-    <label class="check">
-      <input id="sAutoRefresh" type="checkbox">
-      <span>Controlla se ci sono novità ogni 15 minuti mentre la pagina è aperta</span>
-    </label>
-
-    <hr>
-    <h3 class="settings-h3">Servizi collegati</h3>
-    <div class="servizi">
-      <div class="servizio">
-        <div>
-          <b>Simkl</b>
-          <span class="servizio-nota">Serie TV, anime e film. Segna in automatico quello che guardi.</span>
-        </div>
-        <button id="btnSimklConn" class="btn btn-ghost btn-piccolo"></button>
+      <div class="punto">
+        <h3 data-t="home.p2t"></h3>
+        <p data-t="home.p2d"></p>
       </div>
-      <div class="servizio">
-        <div>
-          <b>Trakt</b>
-          <span class="servizio-nota">Serie TV e film. Le serie che nascondi dal progresso su Trakt qui diventano abbandonate.</span>
-        </div>
-        <button id="btnTkConn" class="btn btn-ghost btn-piccolo"></button>
-      </div>
-      <div class="servizio">
-        <div>
-          <b>AniList</b>
-          <span class="servizio-nota">Solo anime. Se lo colleghi, i tuoi anime di lì entrano nella dashboard.</span>
-        </div>
-        <button id="btnAlConn" class="btn btn-ghost btn-piccolo"></button>
+      <div class="punto">
+        <h3 data-t="home.p3t"></h3>
+        <p data-t="home.p3d"></p>
       </div>
     </div>
+    <p class="sezione-d">
+      <a href="guida.html" data-t="home.leggiGuida"></a>
+    </p>
+  </section>
 
-    <hr>
-    <div class="settings-actions">
-      <button id="btnFullSync" class="btn btn-ghost" title="Riscarica da zero tutta la libreria da Simkl. Serve se i conteggi sembrano sbagliati.">Risincronizza tutto</button>
-      <button id="btnExport" class="btn btn-ghost" title="Salva un file con le tue soglie e le scelte fatte a mano">Esporta impostazioni</button>
-      <button id="btnLogout" class="btn btn-danger" title="Toglie ogni collegamento da questo dispositivo. Gli account non vengono toccati.">Scollega tutto</button>
-    </div>
-    <p class="muted small" id="statsLine"></p>
+</main>
 
-    <button id="btnCloseSettings" class="btn btn-big">Chiudi</button>
-  </div>
-</div>
-
-<script src="app.js?v=17"></script>
+<script src="js/lingua.js?v=22"></script>
+<script src="js/stato.js?v=22"></script>
+<script src="js/fonti.js?v=22"></script>
+<script src="js/regole.js?v=22"></script>
+<script src="js/carte.js?v=22"></script>
+<script src="js/telaio.js?v=22"></script>
+<script src="js/home.js?v=22"></script>
 </body>
 </html>
