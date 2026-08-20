@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "dashboard-serie",
+  "name": "Dashboard Serie",
+  "family": "utility",
+  "lifecycle": "Live",
+  "rules": {
+    "kernelVersion": "1.0.0",
+    "profiles": [
+      "web-app",
+      "privacy-sensitive"
+    ]
+  },
+  "sources": {
+    "status": [
+      "README.md",
+      "guida.html"
+    ],
+    "localRules": []
+  },
+  "portfolio": {
+    "public": true,
+    "publicUrl": "https://spidahh.github.io/dashboard-serie/"
+  }
+}
