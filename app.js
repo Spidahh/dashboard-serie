@@ -15,6 +15,17 @@ const CFG = {
   calendar: 'https://data.simkl.in/calendar',
   img: 'https://wsrv.nl/?url=https://simkl.in/posters/',
   storeKey: 'dashboard-serie-v1',
+
+  /* Seconda sorgente: AniList. Copre solo gli anime, ma entra senza server
+     perché il suo login non richiede nessun segreto.
+     Il client_id si crea in due minuti su https://anilist.co/settings/developer
+     mettendo come indirizzo di ritorno questa stessa pagina. */
+  anilist: {
+    clientId: '',                                   // <-- da riempire
+    api: 'https://graphql.anilist.co',
+    auth: 'https://anilist.co/api/v2/oauth/authorize'
+  },
+
   calendarTtl: 5 * 3600e3,      // il CDN di Simkl tiene il calendario 5 ore
   autoRefreshMs: 15 * 60e3      // limite consigliato da Simkl: 15-30 minuti
 };
@@ -45,6 +56,7 @@ let S = {
   cal: {},          // "1648964" -> { t, season, episode }   (solo titoli in libreria)
   calAt: 0,
   det: {},          // "shows:1648964" -> { status, lastAired, at }  scheda della serie
+  al: { token: null, user: null },   // collegamento AniList
   nuove: [],        // stagioni nuove che stanno uscendo e che non hai in libreria
   simili: [],       // consigliate da chi ha visto le stesse cose che hai visto tu
   novita: [],       // appena uscite, che non hai in libreria
@@ -202,6 +214,17 @@ async function sync({ full = false } = {}) {
   $('#btnSync').classList.add('spin');
 
   try {
+    // senza Simkl c'è solo AniList: giro più corto
+    if (!S.token) {
+      await syncAniList();
+      await refreshCalendar({ force: true });
+      S.lastSync = Date.now();
+      save();
+      render();
+      toast('Aggiornato');
+      return;
+    }
+
     const act = await api('/sync/activities');
     const prev = S.act;
     const first = full || !prev || !prev.all || Object.keys(S.lib).length === 0;
@@ -210,6 +233,7 @@ async function sync({ full = false } = {}) {
       S.lastSync = Date.now();
       save();
       await refreshCalendar();
+      await syncAniList();
       await refreshDetails(chiaviDaApprofondire());
       render();
       completaTitoli();
@@ -238,6 +262,7 @@ async function sync({ full = false } = {}) {
     S.lastSync = Date.now();
     save();
 
+    await syncAniList();
     await refreshCalendar({ force: true });
     render();                                   // disegno subito con quello che ho
     await refreshDetails(chiaviDaApprofondire());
@@ -315,6 +340,9 @@ async function reconcile() {
    perché il prefisso resta uguale; qualche caso storto è messo in conto, e per
    quello c'è il pulsante "nascondi" su ogni segnalazione.
 */
+// Gli id di Simkl e di AniList possono coincidere: nel calendario vanno tenuti separati.
+const chiaveCal = e => (e._fonte === 'anilist' ? 'al:' : 'sk:') + e._id;
+
 function radice(titolo) {
   let t = decodifica(titolo || '').toLowerCase();
   t = t.split(/:| - |–|—/)[0];                                   // taglio al primo sottotitolo
@@ -324,13 +352,13 @@ function radice(titolo) {
   return t;
 }
 
-const CAL_VER = 2;   // sale quando cambia cosa ricavo dal calendario, così la cache si rifà
+const CAL_VER = 3;   // sale quando cambia cosa ricavo dal calendario, così la cache si rifà
 
 async function refreshCalendar({ force = false } = {}) {
   const aggiornato = Date.now() - S.calAt < CFG.calendarTtl && Object.keys(S.cal).length && S.calVer === CAL_VER;
   if (!force && aggiornato) return;
 
-  const mie = new Set(Object.values(S.lib).map(e => String(e._id)));
+  const mie = new Set(Object.values(S.lib).filter(e => e._fonte !== 'anilist').map(e => String(e._id)));
   if (!mie.size) return;
 
   /* Le "radici" di quello che hai già. Ma una stagione nuova ha senso proporla
@@ -368,9 +396,10 @@ async function refreshCalendar({ force = false } = {}) {
         if (!isFinite(t) || t < floor) continue;
 
         if (mie.has(String(id))) {                      // ce l'hai: mi serve solo la data
-          const cur = out[id];
+          const ck = 'sk:' + id;
+          const cur = out[ck];
           if (!cur || t < cur.t) {
-            out[id] = { t, season: x.episode?.season ?? null, episode: x.episode?.episode ?? null };
+            out[ck] = { t, season: x.episode?.season ?? null, episode: x.episode?.episode ?? null };
           }
           continue;
         }
@@ -395,6 +424,7 @@ async function refreshCalendar({ force = false } = {}) {
     }
   }
 
+  for (const [k, v] of Object.entries(S.cal)) if (k.startsWith('al:')) out[k] = v;
   S.cal = out;
   S.nuove = [...trovate.values()].sort((a, b) => a.t - b.t).slice(0, 60);
   S.calVer = CAL_VER;
@@ -436,7 +466,7 @@ function schedaScaduta(det, now) {
 function chiaviDaApprofondire() {
   const out = [];
   for (const [key, e] of Object.entries(S.lib)) {
-    if (e.status === 'plantowatch') continue;
+    if (e.status === 'plantowatch' || e._fonte === 'anilist') continue;
     const backlog = (e.total_episodes_count || 0) - (e.not_aired_episodes_count || 0) - (e.watched_episodes_count || 0);
     if (backlog >= 1) out.push(key);
   }
@@ -481,7 +511,9 @@ async function completaTitoli() {
   if (titoliInCorso) return;
   titoliInCorso = true;
   try {
-    const mancanti = Object.keys(S.lib).filter(k => !S.det[k] || S.det[k].enTitle === undefined);
+    const mancanti = Object.keys(S.lib)
+      .filter(k => S.lib[k]._fonte !== 'anilist')
+      .filter(k => !S.det[k] || S.det[k].enTitle === undefined);
     let n = 0;
     for (const key of mancanti) {
       await scaricaScheda(key);
@@ -530,9 +562,182 @@ function decodifica(txt) {
   return chiaro;
 }
 
+// Titolo ridotto all'osso, per riconoscere lo stesso anime arrivato da due servizi.
+function chiaveTitolo(key, e) {
+  return decodifica(titolo(key, e)).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+}
+
 // La ricerca deve funzionare sia col titolo inglese sia con quello romanizzato.
 function cercabile(key, e) {
   return (decodifica(S.det[key]?.enTitle) + ' ' + decodifica(e.show?.title)).toLowerCase();
+}
+
+/* ================================================================
+   AniList — seconda sorgente
+   ================================================================
+
+   Perché entra senza server: il suo login è l'"implicit grant", cioè AniList
+   rimanda qui il token dentro l'indirizzo, senza chiedere nessun segreto. E il
+   suo server accetta le chiamate dal browser. Simkl fa lo stesso col PIN.
+   Trakt no: lì il token si scambia solo con un segreto, e in una pagina che
+   chiunque può leggere un segreto non ci si mette.
+
+   Copre solo gli anime. Le voci vengono tradotte nella stessa forma di quelle
+   Simkl, così tutto il resto della dashboard non sa nemmeno da dove arrivano.
+*/
+
+const AL_STATI = {
+  CURRENT: 'watching', REPEATING: 'watching', PLANNING: 'plantowatch',
+  COMPLETED: 'completed', DROPPED: 'dropped', PAUSED: 'hold'
+};
+
+const AL_QUERY = `query($id:Int){
+  MediaListCollection(userId:$id, type:ANIME){
+    lists{ entries{
+      progress status updatedAt
+      media{
+        id title{romaji english} episodes status
+        endDate{year month day}
+        nextAiringEpisode{episode airingAt}
+        coverImage{large}
+      }
+    } }
+  }
+}`;
+
+function alCollegato() { return !!(S.al && S.al.token); }
+// senza client_id AniList non è utilizzabile: meglio non mostrare un pulsante che non funziona
+function alDisponibile() { return !!CFG.anilist.clientId; }
+
+// Passo 1: mando l'utente su AniList. Torna qui col token nell'indirizzo.
+function alLogin() {
+  const id = CFG.anilist.clientId;
+  if (!id) return toast('Manca il client_id di AniList nelle impostazioni del sito');
+  location.href = `${CFG.anilist.auth}?client_id=${encodeURIComponent(id)}&response_type=token`;
+}
+
+// Passo 2: al ritorno raccolgo il token e ripulisco l'indirizzo.
+function alRaccogliToken() {
+  if (!location.hash.includes('access_token')) return false;
+  const p = new URLSearchParams(location.hash.slice(1));
+  const t = p.get('access_token');
+  history.replaceState(null, '', location.pathname + location.search);
+  if (!t) return false;
+  S.al = { token: t, user: null };
+  save();
+  return true;
+}
+
+function alScollega() {
+  S.al = { token: null, user: null };
+  for (const k of Object.keys(S.lib)) if (S.lib[k]._fonte === 'anilist') delete S.lib[k];
+  for (const k of Object.keys(S.cal)) if (k.startsWith('al:')) delete S.cal[k];
+  save();
+  render();
+}
+
+async function alChiedi(query, variables) {
+  const res = await fetch(CFG.anilist.api, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      ...(S.al?.token ? { Authorization: 'Bearer ' + S.al.token } : {})
+    },
+    body: JSON.stringify({ query, variables })
+  });
+  if (res.status === 401 || res.status === 400) {
+    const testo = await res.text();
+    if (/invalid_token|unauthorized/i.test(testo)) throw new Error('AL_SCADUTO');
+    throw new Error('AniList ' + res.status);
+  }
+  if (!res.ok) throw new Error('AniList ' + res.status);
+  const d = await res.json();
+  if (d.errors?.length) throw new Error(d.errors[0].message || 'AniList');
+  return d.data;
+}
+
+async function syncAniList() {
+  if (!alCollegato()) return;
+  try {
+    if (!S.al.user) {
+      const d = await alChiedi('query{Viewer{id name}}');
+      S.al.user = d?.Viewer || null;
+      if (!S.al.user) return;
+    }
+    const d = await alChiedi(AL_QUERY, { id: S.al.user.id });
+    const liste = d?.MediaListCollection?.lists || [];
+
+    // riparto pulito: AniList manda sempre tutta la lista, non un delta
+    for (const k of Object.keys(S.lib)) if (S.lib[k]._fonte === 'anilist') delete S.lib[k];
+
+    let quante = 0;
+    for (const lista of liste) {
+      for (const v of lista.entries || []) quante += alAggiungi(v) ? 1 : 0;
+    }
+    S.al.at = Date.now();
+    save();
+    return quante;
+
+  } catch (err) {
+    if (err.message === 'AL_SCADUTO') {
+      S.al = { token: null, user: null };
+      save();
+      toast('Il collegamento con AniList è scaduto');
+    } else {
+      console.warn('AniList:', err.message);
+    }
+  }
+}
+
+/* Traduce una voce AniList nella forma che usa tutta la dashboard. */
+function alAggiungi(v) {
+  const m = v.media;
+  if (!m?.id) return false;
+
+  const prossimo = m.nextAiringEpisode || null;
+  // quanti episodi sono già usciti: se ne sta arrivando uno, tutti quelli prima
+  const usciti = prossimo ? Math.max(0, prossimo.episode - 1) : (m.episodes || v.progress || 0);
+  const totali = m.episodes || usciti;
+  const visti = Math.min(v.progress || 0, totali || v.progress || 0);
+
+  const key = 'al:' + m.id;
+  const inOnda = m.status === 'RELEASING' || m.status === 'HIATUS';
+  const fine = m.endDate?.year
+    ? new Date(Date.UTC(m.endDate.year, (m.endDate.month || 1) - 1, m.endDate.day || 1)).toISOString()
+    : null;
+
+  S.lib[key] = {
+    _fonte: 'anilist',
+    _type: 'anime',
+    _id: m.id,
+    status: AL_STATI[v.status] || 'watching',
+    watched_episodes_count: visti,
+    total_episodes_count: totali,
+    not_aired_episodes_count: Math.max(0, totali - usciti),
+    last_watched_at: v.updatedAt ? new Date(v.updatedAt * 1000).toISOString() : null,
+    last_watched: visti ? 'E' + visti : null,
+    next_to_watch: visti < usciti ? 'E' + (visti + 1) : null,
+    next_to_watch_info: visti < usciti ? { title: '', episode: visti + 1, date: null } : undefined,
+    show: {
+      title: m.title?.english || m.title?.romaji || '(senza titolo)',
+      poster: m.coverImage?.large || null,
+      ids: { simkl: m.id, slug: '' }
+    }
+  };
+
+  /* AniList non ha una "scheda" come Simkl, ma dice la stessa cosa in altro modo:
+     se è in onda, e quando è finita. L'ultima uscita la ricavo dal prossimo
+     episodio meno una settimana, che per un anime settimanale è esatto. */
+  S.det[key] = {
+    status: inOnda ? 'airing' : (m.status === 'FINISHED' ? 'ended' : null),
+    lastAired: prossimo ? new Date(prossimo.airingAt * 1000 - 7 * DAY).toISOString() : fine,
+    enTitle: m.title?.english || null,
+    at: Date.now()
+  };
+
+  if (prossimo) S.cal['al:' + m.id] = { t: prossimo.airingAt * 1000, season: null, episode: prossimo.episode };
+  return true;
 }
 
 /* ---------------- consigli ---------------- */
@@ -552,6 +757,7 @@ const CONSIGLI_TTL = 7 * DAY;
 function semiPerConsigli() {
   const semi = [];
   for (const [k, e] of Object.entries(S.lib)) {
+    if (e._fonte === 'anilist') continue;      // i consigli arrivano dalle schede Simkl
     if (e.status !== 'completed' && e.status !== 'watching') continue;
     if ((e.watched_episodes_count || 0) < 3) continue;
     const voto = e.user_rating || 0;
@@ -644,7 +850,7 @@ function analyse(key, e, now) {
   const lastAt = e.last_watched_at ? Date.parse(e.last_watched_at) : null;
   const nextT = e.next_to_watch_info?.date ? Date.parse(e.next_to_watch_info.date) : null;
   const growAt = S.meta[key]?.growthAt ? Date.parse(S.meta[key].growthAt) : null;
-  const cal = S.cal[String(e._id)] || null;
+  const cal = S.cal[chiaveCal(e)] || null;
 
   const inactivity = lastAt ? now - lastAt : Infinity;
 
@@ -731,7 +937,17 @@ function render() {
 
   const groups = { watch: [], pari: [], paused: [], start: [], archive: [] };
 
+  /* Se hai collegato tutti e due i servizi, lo stesso anime può arrivare due volte.
+     Tengo quello di Simkl, che porta più dati, e salto il gemello di AniList. */
+  const daSimkl = new Set();
+  if (S.token && alCollegato()) {
+    for (const [k, e] of Object.entries(S.lib)) {
+      if (e._fonte !== 'anilist' && e._type === 'anime') daSimkl.add(chiaveTitolo(k, e));
+    }
+  }
+
   for (const [key, e] of Object.entries(S.lib)) {
+    if (e._fonte === 'anilist' && daSimkl.size && daSimkl.has(chiaveTitolo(key, e))) continue;
     if (st.type !== 'all' && e._type !== st.type) continue;
     if (q && !cercabile(key, e).includes(q)) continue;
     const a = analyse(key, e, now);
@@ -1041,7 +1257,7 @@ function card(a, small) {
 
   const el = document.createElement('a');
   el.className = 'card';
-  el.href = `https://simkl.com/${kind}/${e._id}/${slug}`;
+  el.href = linkScheda(e, slug);
   el.target = '_blank';
   el.rel = 'noopener';
   const nome = titolo(a.key, e);
@@ -1055,7 +1271,7 @@ function card(a, small) {
     img.loading = 'lazy';
     img.decoding = 'async';
     img.alt = '';
-    img.src = `${CFG.img}${show_.poster}${small ? '_ca' : '_m'}.webp&q=90`;
+    img.src = posterUrl(show_.poster, small);
     poster.appendChild(img);
   } else {
     const f = document.createElement('div');
@@ -1151,6 +1367,19 @@ const SPIEGA_PASTIGLIA = {
   'badge-done': 'Hai visto tutti gli episodi usciti finora',
   'badge-type': 'È un anime'
 };
+
+/* Simkl manda un pezzo di percorso, AniList un indirizzo intero. */
+function posterUrl(poster, piccolo) {
+  if (!poster) return '';
+  if (/^https?:\/\//.test(poster)) return poster;
+  return `${CFG.img}${poster}${piccolo ? '_ca' : '_m'}.webp&q=90`;
+}
+
+function linkScheda(e, slug) {
+  if (e._fonte === 'anilist') return `https://anilist.co/anime/${e._id}`;
+  const kind = e._type === 'anime' ? 'anime' : 'tv';
+  return `https://simkl.com/${kind}/${e._id}/${slug || ''}`;
+}
 
 function badge(cls, txt, spiega) {
   const b = document.createElement('span');
@@ -1295,15 +1524,58 @@ function openSettings() {
   $('#sHot').value = st.hotDays;       $('#vHot').textContent = st.hotDays;
   $('#sAbandon').value = st.abandonDays; $('#vAbandon').textContent = st.abandonDays;
   $('#sReturn').value = st.returnDays; $('#vReturn').textContent = st.returnDays;
+  aggiornaServizi();
   $('#sEnTitles').checked = st.enTitles !== false;
   $('#sDropped').checked = st.showDropped;
   $('#sAutoRefresh').checked = st.autoRefresh;
   show('#settings', true);
 }
 
+function aggiornaServizi() {
+  const sk = $('#btnSimklConn'), al = $('#btnAlConn');
+  if (sk) {
+    sk.textContent = S.token ? 'Scollega' : 'Collega';
+    sk.closest('.servizio').classList.toggle('on', !!S.token);
+    sk.onclick = () => {
+      if (!S.token) { show('#settings', false); logout(); return; }
+      if (!confirm('Scollegare Simkl? La dashboard resterà con i soli anime di AniList, se collegato.')) return;
+      S.token = null; S.act = null;
+      for (const k of Object.keys(S.lib)) if (S.lib[k]._fonte !== 'anilist') delete S.lib[k];
+      save();
+      if (!collegato()) return logout();
+      aggiornaServizi(); render();
+    };
+  }
+  if (al) {
+    const box = al.closest('.servizio');
+    if (!alDisponibile()) {
+      box.classList.remove('on');
+      al.disabled = true;
+      al.textContent = 'non configurato';
+      al.title = 'Manca il client_id di AniList: si crea su anilist.co/settings/developer';
+      return;
+    }
+    al.disabled = false;
+    const ok = alCollegato();
+    al.textContent = ok ? 'Scollega' : 'Collega';
+    al.closest('.servizio').classList.toggle('on', ok);
+    al.onclick = () => {
+      if (ok) {
+        if (!confirm('Scollegare AniList? Gli anime presi da lì spariscono dalla dashboard.')) return;
+        alScollega();
+        if (!collegato()) return logout();
+        aggiornaServizi();
+      } else {
+        alLogin();
+      }
+    };
+  }
+}
+
 function logout(msg) {
   S = { token: null, act: null, lib: {}, meta: {}, cal: {}, calAt: 0, det: {},
-        nuove: [], nascoste: S.nascoste || {}, lastSync: 0, settings: S.settings };
+        al: { token: null, user: null }, nuove: [], simili: [], novita: [], consigliAt: 0,
+        nascoste: S.nascoste || {}, lastSync: 0, settings: S.settings };
   save();
   show('#app', false);
   show('#settings', false);
@@ -1329,6 +1601,8 @@ function applicaSezioni() {
 
 function wire() {
   $('#btnLogin').onclick = startPin;
+  $('#btnLoginAl').onclick = alLogin;
+  show('#btnLoginAl', alDisponibile());
   $('#btnCancelPin').onclick = stopPin;
   $('#btnSync').onclick = () => sync();
   $('#btnSettings').onclick = openSettings;
@@ -1440,8 +1714,11 @@ function exportSettings() {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
+const collegato = () => !!S.token || alCollegato();
+
 async function boot() {
-  if (!S.token) {
+  alRaccogliToken();          // se torno da AniList, il token è nell'indirizzo
+  if (!collegato()) {
     show('#login', true);
     show('#app', false);
     return;

@@ -8,7 +8,7 @@
 <link rel="icon" href="icon.svg">
 <link rel="manifest" href="manifest.webmanifest">
 <!-- il numero di versione sale a ogni modifica: senza, il browser continua a servire i file vecchi -->
-<link rel="stylesheet" href="app.css?v=14">
+<link rel="stylesheet" href="app.css?v=15">
 </head>
 <body>
 
@@ -27,6 +27,7 @@
         su Netflix, Crunchyroll e gli altri. Questa pagina legge quei dati e basta.
       </p>
       <button id="btnLogin" class="btn btn-big">Collega Simkl</button>
+      <button id="btnLoginAl" class="btn btn-alt">Ho AniList (solo anime)</button>
       <a class="login-guida" href="guida.html">Non ce l'ho / non so cos'è &#8594; leggi la guida</a>
     </div>
 
@@ -207,10 +208,29 @@
     </label>
 
     <hr>
+    <h3 class="settings-h3">Servizi collegati</h3>
+    <div class="servizi">
+      <div class="servizio">
+        <div>
+          <b>Simkl</b>
+          <span class="servizio-nota">Serie TV, anime e film. Segna in automatico quello che guardi.</span>
+        </div>
+        <button id="btnSimklConn" class="btn btn-ghost btn-piccolo"></button>
+      </div>
+      <div class="servizio">
+        <div>
+          <b>AniList</b>
+          <span class="servizio-nota">Solo anime. Se lo colleghi, i tuoi anime di lì entrano nella dashboard.</span>
+        </div>
+        <button id="btnAlConn" class="btn btn-ghost btn-piccolo"></button>
+      </div>
+    </div>
+
+    <hr>
     <div class="settings-actions">
       <button id="btnFullSync" class="btn btn-ghost" title="Riscarica da zero tutta la libreria da Simkl. Serve se i conteggi sembrano sbagliati.">Risincronizza tutto</button>
       <button id="btnExport" class="btn btn-ghost" title="Salva un file con le tue soglie e le scelte fatte a mano">Esporta impostazioni</button>
-      <button id="btnLogout" class="btn btn-danger" title="Toglie il collegamento a Simkl da questo dispositivo. Il tuo account Simkl non viene toccato.">Scollega account</button>
+      <button id="btnLogout" class="btn btn-danger" title="Toglie ogni collegamento da questo dispositivo. Gli account non vengono toccati.">Scollega tutto</button>
     </div>
     <p class="muted small" id="statsLine"></p>
 
@@ -218,6 +238,6 @@
   </div>
 </div>
 
-<script src="app.js?v=14"></script>
+<script src="app.js?v=15"></script>
 </body>
 </html>

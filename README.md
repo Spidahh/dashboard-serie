@@ -39,6 +39,25 @@ servire i file vecchi mentre lavori.
 
 ---
 
+## Da dove arrivano i dati
+
+**Simkl** è la sorgente principale: serie TV, anime e film, col tracciamento automatico.
+
+**AniList** si può collegare come seconda sorgente, e copre i soli anime. Entra senza
+bisogno di un server perché il suo login non richiede nessun segreto: AniList rimanda
+il token dentro l'indirizzo. Le sue voci vengono tradotte nella stessa forma di quelle
+Simkl, quindi tutte le regole valgono uguali.
+
+Se colleghi tutti e due, uno stesso anime presente in entrambi compare una volta sola:
+tengo quello di Simkl, che porta più dati.
+
+Per attivarlo serve un `client_id` di AniList, da creare su
+[anilist.co/settings/developer](https://anilist.co/settings/developer) mettendo come
+indirizzo di ritorno quello del sito. Finché manca, il pulsante non compare.
+
+**Trakt** e **MyAnimeList** non entrano allo stesso modo: il primo scambia il token solo
+dietro un segreto, il secondo non accetta chiamate dal browser. Vedi il fondo di questo file.
+
 ## Le sezioni
 
 | Sezione | Cosa contiene |

@@ -117,6 +117,23 @@ html, body {
 .btn-big:hover { background: #3d7ae8; }
 .btn-ghost { background: transparent; }
 .btn-danger { color: var(--hot); border-color: #4a2733; background: transparent; }
+.btn-alt { width: 100%; margin-top: 8px; background: transparent; }
+.btn-piccolo { font-size: 13px; padding: 6px 12px; flex: none; }
+
+.settings-h3 { margin: 0 0 12px; font-size: 15px; }
+.servizi { display: flex; flex-direction: column; gap: 10px; }
+.servizio {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  justify-content: space-between;
+  background: var(--bg-3);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.servizio b { display: block; font-size: 14.5px; }
+.servizio-nota { display: block; margin-top: 3px; font-size: 12.5px; color: var(--txt-2); line-height: 1.45; }
+.servizio.on { border: 1px solid rgba(53, 208, 127, .4); }
 
 .icon-btn {
   font-size: 19px;
