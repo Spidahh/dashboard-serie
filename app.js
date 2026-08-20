@@ -544,8 +544,13 @@ function analyse(key, e, now) {
     (growAt != null && now - growAt <= R) ||                 // il totale episodi è cresciuto da poco
     (cal != null && cal.t >= now - 2 * DAY);                 // è nel calendario dei prossimi 33 giorni
 
-  // data che conta per l'ordinamento e per la scritta sotto al poster
-  const airedAt = nextT != null && nextT <= now ? nextT : (growAt || lastAt || null);
+  /* Data che conta per la fascia, per l'ordinamento e per la scritta sotto al poster.
+     Deve essere sempre una data di USCITA. Prima ripiegava su last_watched_at, cioè
+     su quando avevi guardato tu: bastava riprendere una serie ieri per vederla
+     comparire fra quelle "appena uscite", e la fascia diceva il falso.
+     L'ultima uscita vera ce l'ho già in cache nella scheda della serie. */
+  const ultimaUscita = S.det[key]?.lastAired ? Date.parse(S.det[key].lastAired) : null;
+  const airedAt = nextT != null && nextT <= now ? nextT : (growAt || ultimaUscita || null);
   const upcomingAt = cal && cal.t > now ? cal.t : (nextT != null && nextT > now ? nextT : null);
 
   const parked = status === 'completed' || status === 'dropped';
@@ -656,8 +661,9 @@ function render() {
   for (const [chiave, sel] of Object.entries(sezioni)) {
     const visibile = (pieno || v === chiave) && (chiave === 'watch' || conteggi[chiave] > 0);
     show(sel, visibile);
-    // guardando una sezione sola non ha senso tenerla chiusa
-    if (!pieno && v === chiave) $(sel)?.classList.remove('closed');
+    // guardando una sezione sola, o cercando, non ha senso tenerla chiusa:
+    // prima i risultati finivano dentro sezioni chiuse e non si vedevano
+    if ((!pieno && v === chiave) || (q && conteggi[chiave] > 0)) $(sel)?.classList.remove('closed');
   }
   show('#emptyWatch', (pieno || v === 'watch') && groups.watch.length === 0);
 
@@ -1061,7 +1067,11 @@ function wire() {
   $('#btnCloseSettings').onclick = () => show('#settings', false);
   $('#settings').onclick = ev => { if (ev.target.id === 'settings') show('#settings', false); };
 
-  $('#search').oninput = ev => { ui.search = ev.target.value; render(); };
+  $('#search').oninput = ev => {
+    ui.search = ev.target.value;
+    if (!ui.search.trim()) applicaSezioni();   // finita la ricerca, le sezioni tornano come le tenevi
+    render();
+  };
 
   $('#typeChips').onclick = ev => {
     const b = ev.target.closest('.chip');
