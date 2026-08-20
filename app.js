@@ -46,6 +46,9 @@ let S = {
   calAt: 0,
   det: {},          // "shows:1648964" -> { status, lastAired, at }  scheda della serie
   nuove: [],        // stagioni nuove che stanno uscendo e che non hai in libreria
+  simili: [],       // consigliate da chi ha visto le stesse cose che hai visto tu
+  novita: [],       // appena uscite, che non hai in libreria
+  consigliAt: 0,
   nascoste: {},     // id -> true, segnalazioni che hai tolto a mano
   lastSync: 0,
   settings: { ...DEFAULTS }
@@ -202,6 +205,7 @@ async function sync({ full = false } = {}) {
       await refreshDetails(chiaviDaApprofondire());
       render();
       completaTitoli();
+      refreshConsigli().then(render);
       toast('Già aggiornato');
       return;
     }
@@ -231,6 +235,7 @@ async function sync({ full = false } = {}) {
     await refreshDetails(chiaviDaApprofondire());
     render();                                   // e ridisegno quando so quali serie sono ancora vive
     completaTitoli();                           // e intanto, in sottofondo, sistemo i titoli
+    refreshConsigli().then(render);             // e cerco cosa consigliarti
     toast(first ? 'Libreria scaricata' : 'Aggiornato');
 
   } catch (e) {
@@ -320,13 +325,23 @@ async function refreshCalendar({ force = false } = {}) {
   const mie = new Set(Object.values(S.lib).map(e => String(e._id)));
   if (!mie.size) return;
 
-  // le "radici" di quello che hai già, sia col titolo inglese sia con l'originale
-  const radici = new Map();
+  /* Le "radici" di quello che hai già. Ma una stagione nuova ha senso proporla
+     solo se con quella serie sei in buoni rapporti: se ne hai mollata una a metà,
+     consigliarti la successiva è inutile. */
+  const buone = new Map(), mollate = new Set();
   for (const [k, e] of Object.entries(S.lib)) {
+    const arretrati = (e.total_episodes_count || 0) - (e.not_aired_episodes_count || 0) - (e.watched_episodes_count || 0);
+    const visti = e.watched_episodes_count || 0;
+    const promossa = e.status === 'completed' || ((e.status === 'watching' || e.status === 'hold') && visti > 0);
+    const abbandonataAMeta = e.status === 'dropped' && arretrati > 0;
+
     for (const r of [radice(titolo(k, e)), radice(e.show?.title)]) {
-      if (r.length >= 5 && !radici.has(r)) radici.set(r, titolo(k, e));
+      if (r.length < 5) continue;
+      if (abbandonataAMeta) mollate.add(r);
+      if (promossa && !buone.has(r)) buone.set(r, titolo(k, e));
     }
   }
+  const radici = new Map([...buone].filter(([r]) => !mollate.has(r)));
 
   const out = {};
   const trovate = new Map();
@@ -509,6 +524,90 @@ function cercabile(key, e) {
   return (decodifica(S.det[key]?.enTitle) + ' ' + decodifica(e.show?.title)).toLowerCase();
 }
 
+/* ---------------- consigli ---------------- */
+
+/*
+   Due sorgenti, tutte e due ufficiali di Simkl:
+   - "users_recommendations" dentro la scheda di una serie: cosa guarda chi ha
+     visto quella. Partendo da quelle che TU hai amato, esce una lista personale.
+   - "/premieres/new": le serie appena partite, per sapere cosa c'è di nuovo.
+
+   Costa una decina di chiamate, una volta a settimana. Quello che hai già in
+   libreria e quello che hai nascosto non compare mai.
+*/
+const CONSIGLI_TTL = 7 * DAY;
+
+// I titoli da cui partire: quelli che hai amato di più, prima i voti alti.
+function semiPerConsigli() {
+  const semi = [];
+  for (const [k, e] of Object.entries(S.lib)) {
+    if (e.status !== 'completed' && e.status !== 'watching') continue;
+    if ((e.watched_episodes_count || 0) < 3) continue;
+    const voto = e.user_rating || 0;
+    const quando = e.last_watched_at ? Date.parse(e.last_watched_at) : 0;
+    if (!voto && !quando) continue;
+    semi.push({ k, e, punti: voto * 1e12 + quando });
+  }
+  semi.sort((a, b) => b.punti - a.punti);
+  return semi.slice(0, 10);
+}
+
+async function refreshConsigli({ force = false } = {}) {
+  if (!force && Date.now() - (S.consigliAt || 0) < CONSIGLI_TTL && S.simili?.length) return;
+
+  const mie = new Set(Object.values(S.lib).map(e => String(e._id)));
+  const punteggi = new Map();
+
+  for (const seme of semiPerConsigli()) {
+    const tipo = seme.e._type === 'anime' ? 'anime' : 'tv';
+    try {
+      const d = await api(`/${tipo}/${seme.e._id}`, {}, { auth: false });
+      let presi = 0;
+      for (const r of d?.users_recommendations || []) {
+        if (presi >= 4) break;        // un titolo solo non deve riempire tutta la lista
+        const id = r.ids?.simkl;
+        if (!id || mie.has(String(id))) continue;
+        presi++;
+        const perc = parseInt(String(r.users_percent || '0'), 10) || 0;
+        const gia = punteggi.get(id);
+        if (gia) { gia.punti += perc; gia.quante++; }
+        else punteggi.set(id, {
+          id, tipo: r.type === 'anime' ? 'anime' : 'shows',
+          title: r.en_title || r.title, slug: r.ids?.slug || '',
+          poster: r.poster || null, punti: perc, quante: 1,
+          da: titolo(seme.k, seme.e), anno: r.year || null
+        });
+      }
+    } catch (err) { /* un seme che non risponde non ferma gli altri */ }
+    await sleep(200);
+  }
+
+  S.simili = [...punteggi.values()]
+    .sort((a, b) => b.quante - a.quante || b.punti - a.punti)
+    .slice(0, 30);
+
+  // le appena uscite
+  const novita = [];
+  for (const [percorso, tipo] of [['tv', 'shows'], ['anime', 'anime']]) {
+    try {
+      const arr = await api(`/${percorso}/premieres/new`, {}, { auth: false });
+      for (const x of arr || []) {
+        const id = x.ids?.simkl_id ?? x.ids?.simkl;
+        if (!id || mie.has(String(id))) continue;
+        const t = Date.parse(x.date);
+        novita.push({ id, tipo, title: x.title, slug: x.ids?.slug || '',
+                      poster: x.poster || null, t: isFinite(t) ? t : null, anno: x.year || null });
+      }
+    } catch (err) { /* pazienza */ }
+    await sleep(200);
+  }
+  novita.sort((a, b) => (b.t || 0) - (a.t || 0));
+  S.novita = novita.slice(0, 30);
+
+  S.consigliAt = Date.now();
+  save();
+}
+
 /* ---------------- la logica: dove finisce ogni serie ---------------- */
 
 function analyse(key, e, now) {
@@ -644,7 +743,7 @@ function render() {
 
   paintWatch(groups.watch);
   paint('gridPari', groups.pari, 'cPari', true);
-  const nuove = paintNuove();
+  const nuove = paintConsigli();
   paint('gridPaused', groups.paused, 'cPaused', true);
   paint('gridStart', groups.start, 'cStart', true);
   paintArchivio(groups.archive);
@@ -807,23 +906,47 @@ function paintABande(hostId, countId, totale, fasce) {
   host.appendChild(frag);
 }
 
-/* Le stagioni nuove segnalate dal calendario: non sono voci della libreria,
-   quindi hanno una card tutta loro con il pulsante per toglierle di mezzo. */
-function paintNuove() {
+/* La sezione dei consigli: stagioni nuove, simili, appena uscite. */
+function paintConsigli() {
   const q = ui.search.trim().toLowerCase();
-  const lista = (S.nuove || []).filter(x =>
-    !S.nascoste[x.id] &&
+  const ok = x => !S.nascoste[x.id] &&
     (S.settings.type === 'all' || S.settings.type === x.tipo) &&
-    (!q || decodifica(x.title).toLowerCase().includes(q) || decodifica(x.da).toLowerCase().includes(q))
-  );
+    (!q || decodifica(x.title).toLowerCase().includes(q));
 
-  const grid = $('#gridNuove');
-  $('#cNuove').textContent = lista.length;
-  grid.replaceChildren();
+  const fasce = [
+    { label: 'Stagioni nuove di serie che segui', items: (S.nuove || []).filter(ok),
+      nota: 'Stanno uscendo adesso e non le hai in lista su Simkl' },
+    { label: 'Ti potrebbero piacere', items: (S.simili || []).filter(ok),
+      nota: 'Le guarda chi ha visto le stesse cose che hai visto tu' },
+    { label: 'Appena uscite', items: (S.novita || []).filter(ok),
+      nota: 'Serie e anime partiti da poco, che non hai in lista' }
+  ];
+
+  const host = $('#consigliBande');
+  const totale = fasce.reduce((n, f) => n + f.items.length, 0);
+  $('#cNuove').textContent = totale;
+  host.replaceChildren();
+
   const frag = document.createDocumentFragment();
-  for (const x of lista) frag.appendChild(cardNuova(x));
-  grid.appendChild(frag);
-  return lista.length;
+  for (const f of fasce) {
+    if (!f.items.length) continue;
+    const h = document.createElement('h3');
+    h.className = 'band-title';
+    h.appendChild(document.createTextNode(f.label));
+    const n = document.createElement('span');
+    n.className = 'band-n';
+    n.textContent = f.items.length;
+    h.appendChild(n);
+    if (f.nota) h.title = f.nota;
+    frag.appendChild(h);
+
+    const g = document.createElement('div');
+    g.className = 'grid grid-sm';
+    for (const x of f.items) g.appendChild(cardNuova(x));
+    frag.appendChild(g);
+  }
+  host.appendChild(frag);
+  return totale;
 }
 
 function cardNuova(x) {
@@ -850,7 +973,7 @@ function cardNuova(x) {
     f.textContent = nome;
     poster.appendChild(f);
   }
-  poster.appendChild(badge('badge-soon', when(x.t)));
+  if (x.t) poster.appendChild(badge('badge-soon', when(x.t)));
 
   const b = document.createElement('button');
   b.className = 'card-act';
@@ -871,12 +994,19 @@ function cardNuova(x) {
   meta.appendChild(t);
   const sub = document.createElement('div');
   sub.className = 'sub';
-  sub.textContent = x.episode != null ? `Ep. ${x.episode} · ${when(x.t)}` : when(x.t);
+  if (x.episode != null && x.t) sub.textContent = `Ep. ${x.episode} · ${when(x.t)}`;
+  else if (x.t) sub.textContent = when(x.t);
+  else if (x.quante > 1) sub.textContent = `Consigliata da ${x.quante} delle tue serie`;
+  else if (x.anno) sub.textContent = String(x.anno);
+  else sub.textContent = '';
   meta.appendChild(sub);
-  const da = document.createElement('div');
-  da.className = 'ep';
-  da.textContent = 'segui: ' + decodifica(x.da);
-  meta.appendChild(da);
+
+  if (x.da) {
+    const da = document.createElement('div');
+    da.className = 'ep';
+    da.textContent = (x.quante ? 'perché hai visto: ' : 'segui: ') + decodifica(x.da);
+    meta.appendChild(da);
+  }
 
   el.appendChild(poster);
   el.appendChild(meta);

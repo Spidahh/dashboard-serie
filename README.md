@@ -45,7 +45,7 @@ servire i file vecchi mentre lavori.
 |---|---|
 | **Da guardare ora** | Episodi usciti e non ancora visti. È la schermata principale. |
 | **In pari** | Hai visto tutti gli episodi usciti. Dove si sa, c'è la data del prossimo. |
-| **Stagioni nuove** | Stanno uscendo, sembrano seguiti di roba che segui, ma su Simkl non ce le hai. |
+| **Da scoprire** | Roba che non hai in lista: stagioni nuove, consigli, novità appena partite. |
 | **In pausa** | Hanno arretrati, ma sei fermo da troppo tempo. |
 | **Da iniziare** | Il tuo "Plan to watch", più le serie che hai in lista ma non hai mai aperto. |
 | **Archivio** | Niente di nuovo in vista. Diviso in *Finite* e *Abbandonate*. |
@@ -171,6 +171,24 @@ non stai aspettando niente.
 Quelle vanno in *Da iniziare*, non in *In pausa*. Se però è appena uscita resta in
 griglia, come qualunque altra cosa fresca.
 
+### Da scoprire
+
+Tre fasce, tutte con roba che **non hai in lista su Simkl**.
+
+**Stagioni nuove di serie che segui** — vedi sotto come le trova.
+
+**Ti potrebbero piacere** — Simkl, dentro la scheda di ogni serie, tiene la lista
+di cosa guarda chi ha visto quella. La dashboard parte dai tuoi dieci titoli
+migliori (prima quelli con il voto più alto, poi i più recenti) e mette insieme i
+loro consigli. Un titolo solo non può portare più di quattro consigli, altrimenti
+una serie sola riempirebbe tutta la lista.
+
+**Appena uscite** — serie e anime partiti da poco, presi dalle premiere di Simkl.
+
+Si aggiorna una volta a settimana e costa una dozzina di chiamate. Quello che hai
+già in lista non compare mai, e il pulsante **nascondi** toglie per sempre un
+consiglio che non c'entra niente.
+
 ### Stagioni nuove che non hai in libreria
 
 Su Simkl ogni stagione di un anime è spesso una **voce separata**, e il tracker
@@ -187,6 +205,11 @@ Bleach: Sennen Kessen Hen - Kashin Tan   →  radice "bleach"  →  ce l'hai: Bl
 
 La radice si ricava tagliando il sottotitolo dopo i due punti e togliendo in coda
 le parole di stagione e i numeri, romani compresi.
+
+**Se una stagione l'hai mollata a metà, la successiva non te la propongo.** Non
+avrebbe senso consigliarti la quarta stagione di una serie che hai abbandonato alla
+terza senza finirla. Serve che con quella serie tu sia in buoni rapporti: almeno una
+completata, o una che stai guardando davvero.
 
 **È un confronto sui nomi, non su un collegamento ufficiale.** Simkl non espone il
 legame fra le stagioni di una stessa serie. Sugli anime funziona bene perché il

@@ -8,7 +8,7 @@
 <link rel="icon" href="icon.svg">
 <link rel="manifest" href="manifest.webmanifest">
 <!-- il numero di versione sale a ogni modifica: senza, il browser continua a servire i file vecchi -->
-<link rel="stylesheet" href="app.css?v=12">
+<link rel="stylesheet" href="app.css?v=13">
 </head>
 <body>
 
@@ -85,7 +85,7 @@
      <button class="nav-item" data-vista="watch" title="Episodi già usciti che non hai ancora visto">Da guardare ora <span class="nav-n" id="nWatch">0</span></button>
      <div class="nav-fasce" id="navFasce"></div>
      <button class="nav-item" data-vista="pari" title="Hai visto tutti gli episodi usciti">In pari <span class="nav-n" id="nPari">0</span></button>
-     <button class="nav-item" data-vista="nuove" title="Stagioni nuove che stanno uscendo ma non hai su Simkl">Stagioni nuove <span class="nav-n" id="nNuove">0</span></button>
+     <button class="nav-item" data-vista="nuove" title="Stagioni nuove, consigli e novità che non hai in lista">Da scoprire <span class="nav-n" id="nNuove">0</span></button>
      <button class="nav-item" data-vista="paused" title="Hanno arretrati, ma sei fermo da troppo tempo">In pausa <span class="nav-n" id="nPaused">0</span></button>
      <button class="nav-item" data-vista="start" title="Nella lista, ma non le hai mai aperte">Da iniziare <span class="nav-n" id="nStart">0</span></button>
      <button class="nav-item" data-vista="archive" title="Finite o abbandonate, senza novità">Archivio <span class="nav-n" id="nArchive">0</span></button>
@@ -115,9 +115,9 @@
 
     <!-- STAGIONI NUOVE NON IN LIBRERIA -->
     <section class="block collapsible" id="secNuove">
-      <h2 class="block-title toggle" data-target="gridNuove">Stagioni nuove <span class="count" id="cNuove">0</span><span class="caret">&#9662;</span></h2>
-      <p class="hint">Stanno uscendo adesso e sembrano il seguito di qualcosa che segui, ma su Simkl non le hai in lista. Aggiungile lì ed entrano qui da sole. Se l'accostamento è sbagliato, usa <b>nascondi</b> sul poster.</p>
-      <div id="gridNuove" class="grid grid-sm"></div>
+      <h2 class="block-title toggle">Da scoprire <span class="count" id="cNuove">0</span><span class="caret">&#9662;</span></h2>
+      <p class="hint">Roba che non hai in lista su Simkl: stagioni nuove di serie che segui, titoli consigliati da chi guarda le tue stesse cose, e novità appena partite. Se un consiglio non c'entra niente, usa <b>nascondi</b> sul poster e non torna più.</p>
+      <div id="consigliBande"></div>
     </section>
 
     <!-- IN PAUSA -->
@@ -205,6 +205,6 @@
   </div>
 </div>
 
-<script src="app.js?v=12"></script>
+<script src="app.js?v=13"></script>
 </body>
 </html>
