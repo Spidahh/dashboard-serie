@@ -8,7 +8,7 @@
 <link rel="icon" href="icon.svg">
 <link rel="manifest" href="manifest.webmanifest">
 <!-- il numero di versione sale a ogni modifica: senza, il browser continua a servire i file vecchi -->
-<link rel="stylesheet" href="app.css?v=6">
+<link rel="stylesheet" href="app.css?v=7">
 </head>
 <body>
 
@@ -88,7 +88,18 @@
       <p id="emptyWatch" class="empty hidden">Sei in pari. Non c'è niente di arretrato.</p>
     </section>
 
-    <div class="secondarie" id="secondarie">
+    <!-- IN ARRIVO -->
+    <section class="block collapsible" id="secSoon">
+      <h2 class="block-title toggle" data-target="gridSoon">In arrivo <span class="count" id="cSoon">0</span><span class="caret">&#9662;</span></h2>
+      <div id="gridSoon" class="grid grid-sm"></div>
+    </section>
+
+    <!-- STAGIONI NUOVE NON IN LIBRERIA -->
+    <section class="block collapsible" id="secNuove">
+      <h2 class="block-title toggle" data-target="gridNuove">Stagioni nuove che non hai <span class="count" id="cNuove">0</span><span class="caret">&#9662;</span></h2>
+      <p class="hint">Stanno uscendo adesso e sembrano seguiti di serie che hai in libreria, ma su Simkl non ce le hai. Aggiungile lì ed entrano nella dashboard da sole.</p>
+      <div id="gridNuove" class="grid grid-sm"></div>
+    </section>
 
     <!-- IN ATTESA -->
     <section class="block collapsible closed" id="secWaiting">
@@ -116,25 +127,8 @@
       <div id="gridArchive" class="grid grid-sm"></div>
     </section>
 
-    </div><!-- /secondarie -->
    </main>
 
-   <!-- ============ COLONNA LATERALE ============ -->
-   <aside class="rail" id="rail">
-     <!-- IN ARRIVO -->
-     <section class="block collapsible" id="secSoon">
-       <h2 class="block-title toggle" data-target="gridSoon">In arrivo <span class="count" id="cSoon">0</span><span class="caret">&#9662;</span></h2>
-       <div id="gridSoon" class="grid grid-sm"></div>
-     </section>
-
-     <!-- STAGIONI NUOVE NON IN LIBRERIA -->
-     <section class="block collapsible" id="secNuove">
-       <h2 class="block-title toggle" data-target="gridNuove">Stagioni nuove che non hai <span class="count" id="cNuove">0</span><span class="caret">&#9662;</span></h2>
-       <p class="hint">Stanno uscendo adesso e sembrano seguiti di serie che hai in libreria, ma su Simkl non ce le hai. Aggiungile lì ed entrano nella dashboard da sole.</p>
-       <div id="gridNuove" class="grid grid-sm"></div>
-     </section>
-
-   </aside>
   </div><!-- /layout -->
 
   <div id="toast" class="toast hidden"></div>
@@ -194,6 +188,6 @@
   </div>
 </div>
 
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>

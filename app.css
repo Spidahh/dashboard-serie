@@ -164,35 +164,19 @@ html, body {
 
 /* ---------------- impianto della pagina ---------------- */
 
-/* Tre zone: menù, contenuto, colonna laterale. Su schermi larghi stanno
-   affiancate e lo schermo si riempie di roba utile invece che di vuoto;
-   restringendo, la laterale scivola sotto al contenuto. */
+/* Due zone: il menù a sinistra, il contenuto a destra.
+   Il contenuto si prende tutto lo spazio che resta. */
 .layout {
   display: grid;
   align-items: start;
   grid-template-columns: 210px minmax(0, 1fr);
-  grid-template-areas:
-    "nav main"
-    "nav rail";
   gap: 30px;
   max-width: 2400px;
   margin: 0 auto;
   padding: 20px clamp(12px, 2.4vw, 30px) 90px;
 }
 
-.nav { grid-area: nav; }
-main  { grid-area: main; min-width: 0; }
-.rail { grid-area: rail; min-width: 0; }
-
-@media (min-width: 1560px) {
-  .layout {
-    grid-template-columns: 210px minmax(0, 1fr) 340px;
-    grid-template-areas: "nav main rail";
-  }
-  /* nella colonna stretta i poster stanno a due per riga */
-  .rail .grid-sm { grid-template-columns: repeat(2, 1fr); }
-  .rail .block { margin-bottom: 26px; }
-}
+main { min-width: 0; }
 
 /* la navigazione resta ferma mentre scorri */
 .nav {
@@ -256,17 +240,7 @@ main  { grid-area: main; min-width: 0; }
 }
 .nav-fascia:hover { color: var(--txt); border-left-color: var(--accent); }
 
-/* Le sezioni secondarie stanno affiancate finché sono chiuse: così lo schermo
-   largo non resta vuoto. Quella che apri si prende tutta la riga, perché una
-   griglia di poster dentro mezza colonna non si guarda. */
-.secondarie {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(430px, 1fr));
-  gap: 0 30px;
-  align-items: start;
-}
-.secondarie .collapsible:not(.closed) { grid-column: 1 / -1; }
-.secondarie .collapsible.closed { margin-bottom: 12px; }
+
 
 .block { margin-bottom: 34px; }
 
@@ -467,11 +441,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 20px 0; }
 }
 
 @media (max-width: 1100px) {
-  .layout {
-    grid-template-columns: 1fr;
-    grid-template-areas: "nav" "main" "rail";
-    gap: 14px;
-  }
+  .layout { grid-template-columns: 1fr; gap: 14px; }
 
   .nav {
     position: sticky;
@@ -504,7 +474,6 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 20px 0; }
   /* le fasce non stanno in una barra orizzontale: si raggiungono scorrendo */
   .nav-fasce { display: none; }
 
-  .secondarie { grid-template-columns: 1fr; gap: 0; }
 }
 
 @media (max-width: 560px) {

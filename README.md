@@ -67,15 +67,14 @@ Su schermi stretti il menù diventa una barra orizzontale sopra al contenuto.
 
 ### Come è disposta la pagina
 
-Su uno schermo largo ci sono tre zone affiancate: il menù, il contenuto, e una
-colonna laterale con *In arrivo* e *Stagioni nuove*. Così lo spazio a destra è
-pieno di roba utile invece che vuoto.
+Due zone: il menù stretto a sinistra, il contenuto a destra che si prende tutto il
+resto dello spazio.
 
-Sotto i 1560px la colonna laterale scende sotto al contenuto. Sotto i 1100px anche
-il menù passa sopra, in orizzontale.
+Con **Tutto** selezionato il riquadro grande contiene tutte le categorie, una sotto
+l'altra, ognuna col suo titolo apribile. Cliccando una singola voce del menù, a
+destra resta **solo quella schermata**.
 
-Le sezioni chiuse si affiancano fra loro; quella che apri si prende tutta la riga,
-perché una griglia di poster dentro mezza colonna non si guarda.
+Sotto i 1100px il menù passa sopra al contenuto, in orizzontale.
 
 **Regola di fondo:** una serie finisce **In pausa** solo se ci sono episodi usciti
 che non hai visto. Se sei in pari e stai solo aspettando la stagione nuova, va in

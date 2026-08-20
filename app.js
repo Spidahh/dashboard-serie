@@ -667,8 +667,6 @@ function render() {
   }
   show('#emptyWatch', (pieno || v === 'watch') && groups.watch.length === 0);
 
-  const railPieno = ['#secSoon', '#secNuove'].some(sel => !$(sel)?.classList.contains('hidden'));
-  show('#rail', railPieno);
 
   const tot = Object.keys(S.lib).length;
   const arretrati = groups.watch.reduce((s, a) => s + a.backlog, 0);
