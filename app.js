@@ -121,6 +121,14 @@ async function api(path, params = {}, { auth = true } = {}) {
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+/* Ridisegnare a ogni tasto premuto, con centinaia di card, fa scattare la pagina.
+   Aspetto che tu abbia finito di scrivere o di trascinare il cursore. */
+let attesaDisegno = null;
+function renderTraPoco(ms = 140) {
+  clearTimeout(attesaDisegno);
+  attesaDisegno = setTimeout(render, ms);
+}
+
 /* ---------------- collegamento account (flusso PIN) ---------------- */
 
 async function startPin() {
@@ -446,7 +454,9 @@ async function scaricaScheda(key) {
   } catch (err) {
     S.det[key] = { status: null, lastAired: null, enTitle: null, at: Date.now() };  // non insisto subito
   }
-  await sleep(200);                                     // 5 al secondo: metà del limite consentito
+  /* 3 al secondo. Il limite di Simkl è 10, ma vale per client_id, non per persona:
+     se il sito lo usano in tanti, i primi avvii si sommano. Meglio stare larghi. */
+  await sleep(330);
 }
 
 // Fase 1: le schede che servono a decidere dove va una serie. Blocca il disegno.
@@ -478,7 +488,8 @@ async function completaTitoli() {
       if (++n % 25 === 0) {
         const info = $('#syncInfo');
         if (info) info.textContent = `titoli ${n}/${mancanti.length}…`;
-        save(); render();
+        save();
+        if (n % 100 === 0) render();   // ridisegnare 700 card ogni 25 schede ingolfava la pagina
       }
     }
     if (n) { save(); render(); updateSyncInfo(); }
@@ -1327,7 +1338,7 @@ function wire() {
   $('#search').oninput = ev => {
     ui.search = ev.target.value;
     if (!ui.search.trim()) applicaSezioni();   // finita la ricerca, le sezioni tornano come le tenevi
-    render();
+    renderTraPoco();
   };
 
   $('#typeChips').onclick = ev => {
@@ -1350,22 +1361,22 @@ function wire() {
   $('#sPause').oninput = ev => {
     S.settings.pauseDays = +ev.target.value;
     $('#vPause').textContent = ev.target.value;
-    save(); render();
+    save(); renderTraPoco(120);
   };
   $('#sHot').oninput = ev => {
     S.settings.hotDays = +ev.target.value;
     $('#vHot').textContent = ev.target.value;
-    save(); render();
+    save(); renderTraPoco(120);
   };
   $('#sAbandon').oninput = ev => {
     S.settings.abandonDays = +ev.target.value;
     $('#vAbandon').textContent = ev.target.value;
-    save(); render();
+    save(); renderTraPoco(120);
   };
   $('#sReturn').oninput = ev => {
     S.settings.returnDays = +ev.target.value;
     $('#vReturn').textContent = ev.target.value;
-    save(); render();
+    save(); renderTraPoco(120);
   };
   $('#sEnTitles').onchange = ev => { S.settings.enTitles = ev.target.checked; save(); render(); };
   $('#sDropped').onchange = ev => { S.settings.showDropped = ev.target.checked; save(); render(); };

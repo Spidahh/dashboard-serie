@@ -1,9 +1,9 @@
 /* Service worker: tiene la pagina apribile anche senza rete.
    I dati arrivano sempre dalla rete o dalla memoria del browser, mai da qui. */
 
-const CACHE = 'dashboard-serie-v13';
+const CACHE = 'dashboard-serie-v14';
 // gli stessi indirizzi che chiede la pagina, numero di versione compreso
-const SHELL = ['./', './index.html', './app.css?v=13', './app.js?v=13', './icon.svg', './manifest.webmanifest'];
+const SHELL = ['./', './index.html', './guida.html', './app.css?v=14', './app.js?v=14', './icon.svg', './manifest.webmanifest'];
 
 self.addEventListener('install', ev => {
   ev.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -35,6 +35,6 @@ self.addEventListener('fetch', ev => {
         caches.open(CACHE).then(c => c.put(req, copy));
         return res;
       })
-      .catch(() => caches.match(req).then(hit => hit || caches.match('./index.html')))
+      .catch(() => caches.match(req).then(hit => hit || caches.match('./index.html', './guida.html')))
   );
 });

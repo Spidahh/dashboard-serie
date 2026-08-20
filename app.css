@@ -53,7 +53,31 @@ html, body {
   box-shadow: var(--shadow);
 }
 
-.login-box h1 { margin: 0 0 8px; font-size: 26px; }
+.login-box h1 { margin: 0 0 10px; font-size: 27px; letter-spacing: -.02em; }
+.login-occhiello { margin: 0 0 22px; font-size: 14.5px; color: var(--txt-2); line-height: 1.55; }
+.login-serve {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: var(--txt-2);
+  line-height: 1.55;
+  text-align: left;
+  background: var(--bg-3);
+  border-radius: 10px;
+  padding: 13px 15px;
+}
+.login-serve b { color: var(--txt); }
+.login-guida { display: inline-block; margin-top: 14px; font-size: 13.5px; color: var(--accent); text-decoration: none; }
+.login-guida:hover { color: var(--txt); text-decoration: underline; }
+
+.login-passo { display: flex; align-items: center; justify-content: center; gap: 9px; margin: 0 0 8px; font-size: 14.5px; }
+.login-n {
+  display: grid; place-items: center;
+  width: 22px; height: 22px;
+  font-size: 12.5px; font-weight: 700; color: #fff;
+  background: var(--accent); border-radius: 50%;
+}
+
+.login-privacy { margin: 22px 0 0; font-size: 12.5px; color: #6d7a8d; line-height: 1.5; }
 
 .pin-code {
   font: 700 40px/1.2 ui-monospace, "Cascadia Mono", Consolas, monospace;
@@ -543,4 +567,92 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 20px 0; }
   .card-act { opacity: 1; font-size: 10.5px; padding: 3px 6px; }
   .badge-type { display: none; }
   .search { flex: 1 1 100%; }
+}
+
+
+/* ================================================================
+   Pagina della guida
+   ================================================================ */
+
+.pagina { padding: 0; }
+
+.guida-top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(14, 17, 22, .93);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+  padding: 14px clamp(16px, 4vw, 32px);
+}
+.guida-back { color: var(--txt-2); text-decoration: none; font-size: 14px; font-weight: 600; }
+.guida-back:hover { color: var(--txt); }
+
+.guida {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 36px clamp(16px, 4vw, 32px) 90px;
+  line-height: 1.6;
+}
+
+.guida h1 { margin: 0 0 18px; font-size: 32px; letter-spacing: -.02em; }
+.guida-occhiello { margin: 0 0 14px; font-size: 16px; color: var(--txt-2); }
+.guida-occhiello b { color: var(--txt); }
+
+.guida-h2 { margin: 44px 0 16px; font-size: 21px; }
+.guida-riga { border: 0; border-top: 1px solid var(--line); margin: 48px 0; }
+
+.guida a { color: var(--accent); }
+.guida a:hover { color: var(--txt); }
+
+/* i tre passaggi */
+.passo { display: flex; gap: 18px; margin: 34px 0; }
+.passo-n {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--accent);
+  border-radius: 50%;
+}
+.passo-corpo { min-width: 0; }
+.passo-corpo h2 { margin: 6px 0 10px; font-size: 20px; }
+.passo-corpo h3 { margin: 22px 0 6px; font-size: 15px; color: var(--txt); }
+.passo-corpo p { margin: 0 0 12px; }
+
+.nota {
+  font-size: 14px;
+  color: var(--txt-2);
+  border-left: 2px solid var(--line);
+  padding-left: 14px;
+}
+
+.lista { margin: 0 0 12px; padding-left: 22px; }
+.lista li { margin-bottom: 5px; }
+
+/* tabelle a due colonne, senza <table> per stare comode sul telefono */
+.tabella { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.riga { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 0; }
+.riga + .riga { border-top: 1px solid var(--line); }
+.cella-t { padding: 13px 16px; font-weight: 600; background: var(--bg-2); display: flex; align-items: center; }
+.cella-d { padding: 13px 16px; color: var(--txt-2); }
+.cella-d b { color: var(--txt); }
+
+/* le pastiglie mostrate come esempio, non sopra a un poster */
+.badge.pos { position: static; box-shadow: none; }
+
+.faq h3 { margin: 26px 0 6px; font-size: 16px; }
+.faq p { margin: 0; color: var(--txt-2); }
+
+.guida-fine { margin-top: 46px; }
+.btn-largo { display: block; text-align: center; text-decoration: none; }
+
+@media (max-width: 560px) {
+  .riga { grid-template-columns: 1fr; }
+  .cella-t { border-bottom: 1px solid var(--line); }
+  .guida h1 { font-size: 26px; }
 }
