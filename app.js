@@ -716,18 +716,18 @@ function paintWatch(list) {
   host.appendChild(frag);
 }
 
+/* Due fasce sole: quello uscito nell'ultimo mese e quello che ti trascini da prima.
+   Le fasce intermedie mescolavano lo stesso concetto in tre etichette. */
 function splitBands(list) {
   const now = Date.now();
-  const b = [[], [], [], []];
+  const b = [[], []];
   for (const a of list) {
     const d = a.airedAt ? (now - a.airedAt) / DAY : Infinity;
-    b[d <= 2 ? 0 : d <= 7 ? 1 : d <= 31 ? 2 : 3].push(a);
+    b[d <= 31 ? 0 : 1].push(a);
   }
   return [
     { label: 'Appena usciti', items: b[0] },
-    { label: 'Questa settimana', items: b[1] },
-    { label: 'Questo mese', items: b[2] },
-    { label: 'Più indietro', items: b[3] }
+    { label: 'Più indietro', items: b[1] }
   ];
 }
 
@@ -925,7 +925,7 @@ function badge(cls, txt) {
 
 /* ---------------- il menù di sinistra ---------------- */
 
-const FASCE_NAV = ['Appena usciti', 'Questa settimana', 'Questo mese', 'Più indietro'];
+const FASCE_NAV = ['Appena usciti', 'Più indietro'];
 
 function aggiornaMenu(conteggi, watch) {
   for (const [chiave, id] of Object.entries({

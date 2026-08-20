@@ -60,7 +60,7 @@ Ogni voce porta il suo conteggio. Cliccandola **la pagina mostra solo quella
 sezione**, già aperta: è il modo rapido per andare in Archivio o in Pausa senza
 scorrere. "Tutto" rimette a posto tutto com'era.
 
-Sotto "Da guardare ora" compaiono le fasce (*Appena usciti*, *Questo mese*…):
+Sotto "Da guardare ora" compaiono le due fasce (*Appena usciti*, *Più indietro*):
 quelle non filtrano, portano il punto giusto sotto gli occhi.
 
 Su schermi stretti il menù diventa una barra orizzontale sopra al contenuto.
@@ -82,9 +82,9 @@ che non hai visto. Se sei in pari e stai solo aspettando la stagione nuova, va i
 
 ### La schermata principale
 
-Le serie sono divise per quanto è fresco l'episodio: *Appena usciti*, *Questa
-settimana*, *Questo mese*, *Più indietro*. Così vedi subito cosa è arrivato stanotte
-e cosa ti stai trascinando da un mese.
+Le serie sono divise in due fasce, per quanto è fresco l'episodio:
+**Appena usciti** (nell'ultimo mese) e **Più indietro** (da prima). Così vedi
+subito cosa è arrivato di recente e cosa ti stai trascinando.
 
 Le fasce compaiono con l'ordinamento predefinito. Con gli altri ordinamenti la
 griglia torna unica.
