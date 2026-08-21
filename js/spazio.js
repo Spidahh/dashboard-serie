@@ -207,13 +207,19 @@ function disegna() {
      tengo quello di Simkl, che porta più dati, e salto i gemelli. */
   const daSimkl = insiemeSimkl();
 
+  /* Raccolgo tutte le voci dello spazio PRIMA di applicare la ricerca: i titoli
+     che si chiamano uguale vanno riconosciuti sull'intera libreria, sennò
+     l'anno fra parentesi comparirebbe e sparirebbe mentre scrivi nella ricerca. */
+  const vociSpazio = [];
   for (const [key, e] of Object.entries(S.lib)) {
     if (e._type !== SP.tipo) continue;                       // ogni spazio vede solo il suo
     if (e._fonte && daSimkl.size && chiaviTitolo(key, e).some(c => daSimkl.has(c))) continue;
+    vociSpazio.push([key, e]);
     if (q && !cercabile(key, e).includes(q)) continue;
     const a = analizza(key, e, adesso);
     if (a.sezione && gruppi[a.sezione]) gruppi[a.sezione].push(a);
   }
+  segnalaOmonimi(trovaOmonimi(vociSpazio));
 
   const modo = S.settings.sort[SP.nome] || 'recent';
   for (const id of Object.keys(gruppi)) {

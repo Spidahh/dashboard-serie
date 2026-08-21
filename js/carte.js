@@ -71,13 +71,53 @@ function badge(cls, testo, spiega) {
   return b;
 }
 
+/* ---------------- titoli che si chiamano uguale ---------------- */
+
+/* Su Simkl la seconda stagione di una serie ha lo STESSO titolo della prima:
+   nella libreria di prova erano 25 gruppi, fra cui sei card tutte chiamate
+   "Kingdom". Dove capita, aggiungo l'anno; e dove nemmeno l'anno basta (due
+   stagioni dello stesso anno) aggiungo quanti episodi ha.
+   La mappa la riempie chi disegna la pagina, perche' solo li' si sa quali
+   titoli sono davvero in ballo in questo spazio. */
+let NOMI_AMBIGUI = new Map();
+
+function segnalaOmonimi(mappa) { NOMI_AMBIGUI = mappa; }
+
+/* Trova i titoli che compaiono piu' di una volta, e decide come distinguerli. */
+function trovaOmonimi(voci) {
+  const per = new Map();
+  for (const [key, e] of voci) {
+    const n = normalizza(titolo(key, e));
+    if (!n) continue;
+    if (!per.has(n)) per.set(n, []);
+    per.get(n).push(e);
+  }
+  const out = new Map();
+  for (const [n, lista] of per) {
+    if (lista.length < 2) continue;
+    const anni = new Set(lista.map(e => e.show?.year));
+    out.set(n, anni.size === lista.length ? 'anno' : 'episodi');
+  }
+  return out;
+}
+
+function nomeCarta(key, e) {
+  const n = titolo(key, e);
+  const come = NOMI_AMBIGUI.get(normalizza(n));
+  if (!come) return n;
+  const pezzi = [];
+  if (e.show?.year) pezzi.push(e.show.year);
+  if (come === 'episodi' && e.total_episodes_count) pezzi.push(e.total_episodes_count + ' ep');
+  return pezzi.length ? `${n} (${pezzi.join(' \u00b7 ')})` : n;
+}
+
 /* ---------------- la carta di un titolo che hai ---------------- */
 
 function carta(a, piccola, alCambio) {
   const e = a.e;
   const scheda = e.show || {};
   const slug = scheda.ids?.slug || '';
-  const nome = titolo(a.key, e);
+  const nome = nomeCarta(a.key, e);
   const dove = linkScheda(e, slug);
 
   const el = document.createElement('div');

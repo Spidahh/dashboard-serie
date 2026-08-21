@@ -129,7 +129,8 @@ async function sync({ full = false, quando } = {}) {
 
     const act = await api('/sync/activities');
     const prev = S.act;
-    const first = full || !prev || !prev.all || Object.keys(S.lib).length === 0;
+    const first = full || !prev || !prev.all || Object.keys(S.lib).length === 0
+                  || S.syncVer !== SYNC_VER;
 
     if (!first && act && act.all && act.all === prev.all) {
       S.lastSync = Date.now();
@@ -162,6 +163,7 @@ async function sync({ full = false, quando } = {}) {
     }
 
     S.act = act;
+    if (first) S.syncVer = SYNC_VER;      // giro completo fatto: non lo rifaccio piu'
     S.lastSync = Date.now();
     save();
 

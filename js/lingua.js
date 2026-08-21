@@ -150,6 +150,7 @@ const DIZIONARIO = {
   'ord.oldest':          ['Uscito da più tempo', 'Released longest ago'],
   'ord.backlog':         ['Quanti episodi arretrati', 'Biggest backlog'],
   'ord.lastwatch':       ['Guardati di recente', 'Watched recently'],
+  'ord.added':           ['Aggiunti di recente', 'Added recently'],
   'ord.title':           ['Titolo, dalla A alla Z', 'Title, A to Z'],
   'ctrl.aggiorna':       ['Aggiorna', 'Refresh'],
   'ctrl.tutte':          ['Tutte le categorie', 'All categories'],

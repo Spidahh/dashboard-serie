@@ -45,6 +45,13 @@ const CFG = {
 
 const DAY = 864e5;
 
+/* Sale quando cambia COSA scarico, non come. Chi ha in memoria una libreria
+   costruita con una versione precedente rifa' un giro completo una volta sola,
+   altrimenti resterebbe per sempre senza le cose aggiunte dopo: i film sono
+   arrivati con la versione 2, e chi aveva gia' la libreria non li avrebbe mai
+   visti perche' i delta portano solo quello che cambia. */
+const SYNC_VER = 2;
+
 /* I tre spazi. Ognuno ha la sua pagina, il suo menù e i suoi conti, e non si
    mescolano mai: è il punto di tutta la riorganizzazione. Il "tipo" è la stessa
    parola che usano le API, così non devo tradurre avanti e indietro. */

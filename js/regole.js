@@ -49,6 +49,7 @@ function analizzaSerie(key, e, adesso) {
   const arretrati = inPari ? 0 : Math.max(0, totali - nonUsciti - visti);
 
   const guardatoIl = e.last_watched_at ? Date.parse(e.last_watched_at) : null;
+  const aggiuntoIl = e.added_to_watchlist_at ? Date.parse(e.added_to_watchlist_at) : null;
   const prossimoT = e.next_to_watch_info?.date ? Date.parse(e.next_to_watch_info.date) : null;
   const cresciutoIl = S.meta[key]?.growthAt ? Date.parse(S.meta[key].growthAt) : null;
   const cal = S.cal[chiaveCal(e)] || null;
@@ -108,7 +109,7 @@ function analizzaSerie(key, e, adesso) {
   if (scelto === 'watch' && sezione !== 'watch') sezione = 'watch';
   if (scelto === 'pausa' && sezione === 'watch') { sezione = 'pausa'; tornata = false; }
 
-  return { key, e, arretrati, sezione, tornata, guardatoIl, uscitoIl, inArrivoIl, cal };
+  return { key, e, arretrati, sezione, tornata, guardatoIl, aggiuntoIl, uscitoIl, inArrivoIl, cal };
 }
 
 /* ---------------- film ---------------- */
@@ -128,6 +129,7 @@ function analizzaFilm(key, e, adesso) {
   else uscito = true;                                   // se non so niente, do per uscito
 
   const guardatoIl = e.last_watched_at ? Date.parse(e.last_watched_at) : null;
+  const aggiuntoIl = e.added_to_watchlist_at ? Date.parse(e.added_to_watchlist_at) : null;
   const uscitoIl = uscita != null && isFinite(uscita) && uscita <= adesso ? uscita
                  : (anno ? Date.parse(anno + '-01-01') : null);
   const inArrivoIl = uscita != null && isFinite(uscita) && uscita > adesso ? uscita : null;
@@ -141,7 +143,7 @@ function analizzaFilm(key, e, adesso) {
   if (scelto === 'watch' && sezione === 'visti') sezione = 'daVedere';
   if (scelto === 'pausa' && sezione === 'daVedere') sezione = 'visti';
 
-  return { key, e, arretrati: 0, sezione, tornata: false, guardatoIl, uscitoIl, inArrivoIl, cal: null, film: true };
+  return { key, e, arretrati: 0, sezione, tornata: false, guardatoIl, aggiuntoIl, uscitoIl, inArrivoIl, cal: null, film: true };
 }
 
 /* ---------------- l'etichetta del prossimo episodio ---------------- */
@@ -163,8 +165,8 @@ function etichettaProssimo(a) {
 
 /* L'ordinamento scelto vale per TUTTE le sezioni dello spazio, non solo per la
    prima: prima cambiava il menù e sotto non si muoveva niente. */
-const ORDINI_SERIE = ['recent', 'oldest', 'backlog', 'lastwatch', 'title'];
-const ORDINI_FILM  = ['recent', 'oldest', 'lastwatch', 'title'];
+const ORDINI_SERIE = ['recent', 'oldest', 'backlog', 'lastwatch', 'added', 'title'];
+const ORDINI_FILM  = ['recent', 'oldest', 'lastwatch', 'added', 'title'];
 
 function ordina(lista, modo) {
   const per = {
@@ -172,6 +174,7 @@ function ordina(lista, modo) {
     oldest:    (x, y) => (x.uscitoIl || Infinity) - (y.uscitoIl || Infinity),
     backlog:   (x, y) => y.arretrati - x.arretrati || (y.uscitoIl || 0) - (x.uscitoIl || 0),
     lastwatch: (x, y) => (y.guardatoIl || 0) - (x.guardatoIl || 0),
+    added:     (x, y) => (y.aggiuntoIl || 0) - (x.aggiuntoIl || 0),
     title:     (x, y) => titolo(x.key, x.e).localeCompare(titolo(y.key, y.e))
   };
   lista.sort(per[modo] || per.recent);
