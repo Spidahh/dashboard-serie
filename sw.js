@@ -5,13 +5,13 @@
    sia il nome della cache sia gli indirizzi dello shell.
    Va tenuto uguale al ?v= di index.html e guida.html. Se qualcuno se ne dimentica
    uno, app.js se ne accorge da solo e lo scrive nella console. */
-const VERSIONE = '22';
+const VERSIONE = '23';
 
 const CACHE = 'dashboard-serie-v' + VERSIONE;
 // gli stessi indirizzi che chiedono le pagine, numero di versione compreso
 const PAGINE = ['./', './index.html', './anime.html', './serie.html', './film.html',
                 './impostazioni.html', './guida.html'];
-const CODICE = ['lingua', 'stato', 'fonti', 'regole', 'carte', 'telaio', 'spazio', 'home', 'impostazioni']
+const CODICE = ['lingua', 'stato', 'fonti', 'regole', 'carte', 'telaio', 'spazio', 'esempio', 'home', 'impostazioni']
                  .map(n => `./js/${n}.js?v=${VERSIONE}`);
 const SHELL = [...PAGINE, `./app.css?v=${VERSIONE}`, ...CODICE,
                './icon.svg', './manifest.webmanifest'];

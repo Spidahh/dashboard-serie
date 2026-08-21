@@ -405,6 +405,40 @@ main { min-width: 0; }
    Archivio chiuso mostrava "Finite" e "Abbandonate" con sotto il vuoto. */
 .collapsible.closed > *:not(.block-title) { display: none; }
 
+/* La fascia dell'esempio. Deve saltare all'occhio senza sembrare un errore:
+   non e' un guasto, e' una vetrina. */
+.avviso-esempio {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 0 0 22px;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--txt);
+  background: rgba(255, 176, 32, .1);
+  border: 1px solid rgba(255, 176, 32, .38);
+  border-radius: 10px;
+}
+.avviso-esempio span { flex: 1 1 260px; }
+.avviso-esempio b { color: var(--warm); }
+.avviso-esempio .btn { flex: none; border-color: var(--warm); color: var(--warm); }
+.avviso-esempio .btn:hover { background: rgba(255, 176, 32, .14); }
+
+/* La prima sincronizzazione dura minuti: dirlo evita che sembri rotto. */
+.avviso-carico {
+  margin: 0 0 22px;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--txt-2);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.avviso-carico b { color: var(--txt); }
+
 /* Quando un filtro è acceso deve vedersi: altrimenti i numeri nel menù
    cambiano e sembra che si sia rotto qualcosa. */
 .filtro-attivo {
@@ -737,6 +771,48 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 20px 0; }
 
 /* le pastiglie mostrate come esempio, non sopra a un poster */
 .badge.pos { position: static; box-shadow: none; }
+
+/* I blocchi che si aprono con un clic. Servono a togliere il muro di testo
+   dalla guida senza buttare via le informazioni: chi ha fretta legge i titoli,
+   chi vuole i dettagli apre. E' il tag <details>, quindi funziona anche senza
+   JavaScript e lo capiscono gli screen reader. */
+.pieghevole {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin: 10px 0;
+  background: var(--bg-2);
+  overflow: hidden;
+}
+.pieghevole > summary {
+  cursor: pointer;
+  padding: 13px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--txt-2);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  transition: color .13s;
+}
+.pieghevole > summary::-webkit-details-marker { display: none; }
+.pieghevole > summary::before {
+  content: 'a';
+  font-size: 18px;
+  line-height: 1;
+  transition: transform .18s;
+}
+.pieghevole[open] > summary::before { transform: rotate(90deg); }
+.pieghevole > summary:hover { color: var(--txt); }
+.pieghevole[open] > summary { color: var(--txt); border-bottom: 1px solid var(--line); }
+.pieghevole > *:not(summary) { margin: 14px 16px; }
+.pieghevole .tabella { margin: 14px 16px; }
+.pieghevole h3 { margin: 16px 16px 4px; font-size: 14.5px; }
+.pieghevole.grande > summary { font-size: 15.5px; color: var(--txt); }
+
+.passo-corpo .pieghevole { margin-top: 14px; }
+
+.hero-sotto2 { margin-top: -14px; font-size: 15px; }
 
 .faq h3 { margin: 26px 0 6px; font-size: 16px; }
 .faq p { margin: 0; color: var(--txt-2); }

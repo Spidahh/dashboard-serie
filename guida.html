@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0e1116">
 <title>Guida · Dashboard Serie</title>
-<meta name="description" content="Guida passo passo: scegliere il servizio, far segnare in automatico quello che guardi, e collegare la dashboard.">
+<meta name="description" content="Tre passaggi, una volta sola: un account che segna cosa guardi, e lo colleghi qui.">
 <link rel="icon" href="icon.svg">
 <link rel="manifest" href="manifest.webmanifest">
 <!-- il numero di versione va tenuto uguale in tutte le pagine e in sw.js -->
-<link rel="stylesheet" href="app.css?v=22">
+<link rel="stylesheet" href="app.css?v=23">
 </head>
 <body>
 
@@ -32,52 +32,35 @@
   </div>
 </header>
 
+<!--
+  La guida di prima era un muro: giusta, ma nessuno la leggeva fino in fondo.
+  Adesso in pagina resta il minimo indispensabile — una riga di riassunto e tre
+  passaggi corti — e tutto il resto sta dentro ai blocchi che si aprono con un
+  clic. Chi ha fretta legge dieci righe e ha finito; chi vuole i dettagli li
+  trova dove se li aspetta, senza doverseli scorrere per forza.
+-->
 <main class="pagina-centro stretta guida">
 
   <h1 class="hero-t" data-t="g.titolo"></h1>
-  <p class="guida-occhiello" data-t-html="g.occhiello"></p>
-  <p class="guida-occhiello" data-t="g.trePassi"></p>
+  <p class="guida-occhiello" data-t="g.riassunto"></p>
 
-  <!-- ============ QUALE SERVIZIO ============ -->
-  <h2 class="guida-h2" data-t="g.qualeServizio"></h2>
-  <p class="sezione-d" data-t="g.qualeSotto"></p>
-
-  <div class="tabella">
-    <div class="riga">
-      <div class="cella-t">Simkl</div>
-      <div class="cella-d">
-        <span data-t-html="g.simklD"></span><br>
-        <a href="https://simkl.com/" target="_blank" rel="noopener">simkl.com</a> ·
-        <a href="https://simkl.com/apps/" target="_blank" rel="noopener">simkl.com/apps</a>
-      </div>
-    </div>
-    <div class="riga">
-      <div class="cella-t">Trakt</div>
-      <div class="cella-d">
-        <span data-t-html="g.traktD"></span><br>
-        <a href="https://trakt.tv/" target="_blank" rel="noopener">trakt.tv</a>
-      </div>
-    </div>
-    <div class="riga">
-      <div class="cella-t">AniList</div>
-      <div class="cella-d">
-        <span data-t-html="g.anilistD"></span><br>
-        <a href="https://anilist.co/" target="_blank" rel="noopener">anilist.co</a>
-      </div>
-    </div>
-  </div>
-
-  <hr class="guida-riga">
-
-  <!-- ============ I TRE PASSI ============ -->
+  <!-- ============ I TRE PASSI, CORTI ============ -->
   <section class="passo">
     <div class="passo-n">1</div>
     <div class="passo-corpo">
       <h2 data-t="g.p1"></h2>
-      <p data-t-html="g.p1d"></p>
-      <p class="nota">
-        <a href="https://simkl.com/apps/import/" target="_blank" rel="noopener">simkl.com/apps/import</a>
-      </p>
+      <p><a href="https://simkl.com/" target="_blank" rel="noopener">simkl.com</a> &rarr; <b>Sign up</b>.</p>
+      <details class="pieghevole">
+        <summary data-t="g.dettagli"></summary>
+        <p data-t-html="g.p1d"></p>
+        <p data-t="g.qualeSotto"></p>
+        <div class="tabella">
+          <div class="riga"><div class="cella-t">Simkl</div><div class="cella-d" data-t-html="g.simklD"></div></div>
+          <div class="riga"><div class="cella-t">Trakt</div><div class="cella-d" data-t-html="g.traktD"></div></div>
+          <div class="riga"><div class="cella-t">AniList</div><div class="cella-d" data-t-html="g.anilistD"></div></div>
+        </div>
+        <p><a href="https://simkl.com/apps/import/" target="_blank" rel="noopener">simkl.com/apps/import</a></p>
+      </details>
     </div>
   </section>
 
@@ -85,24 +68,26 @@
     <div class="passo-n">2</div>
     <div class="passo-corpo">
       <h2 data-t="g.p2"></h2>
-      <p data-t="g.p2d"></p>
-
-      <h3 data-t="g.p2pc"></h3>
-      <p data-t-html="g.p2pcD"></p>
-      <p><a href="https://simkl.com/apps/chrome/" target="_blank" rel="noopener">simkl.com/apps/chrome</a></p>
-
-      <h3 data-t="g.p2tel"></h3>
-      <p data-t="g.p2telD"></p>
-      <p><a href="https://simkl.com/apps/mobile/" target="_blank" rel="noopener">simkl.com/apps/mobile</a></p>
-
-      <h3 data-t="g.p2media"></h3>
-      <p data-t="g.p2mediaD"></p>
       <p>
-        <a href="https://simkl.com/apps/plex/" target="_blank" rel="noopener">Plex</a> ·
-        <a href="https://simkl.com/apps/kodi/" target="_blank" rel="noopener">Kodi</a> ·
-        <a href="https://simkl.com/apps/emby/" target="_blank" rel="noopener">Emby</a> ·
-        <a href="https://simkl.com/apps/jellyfin/" target="_blank" rel="noopener">Jellyfin</a>
+        <a href="https://simkl.com/apps/chrome/" target="_blank" rel="noopener">L'estensione per il browser</a>,
+        o <a href="https://simkl.com/apps/mobile/" target="_blank" rel="noopener">l'app del telefono</a>.
       </p>
+      <details class="pieghevole">
+        <summary data-t="g.dettagli"></summary>
+        <p data-t="g.p2d"></p>
+        <h3 data-t="g.p2pc"></h3>
+        <p data-t-html="g.p2pcD"></p>
+        <h3 data-t="g.p2tel"></h3>
+        <p data-t="g.p2telD"></p>
+        <h3 data-t="g.p2media"></h3>
+        <p data-t="g.p2mediaD"></p>
+        <p>
+          <a href="https://simkl.com/apps/plex/" target="_blank" rel="noopener">Plex</a> ·
+          <a href="https://simkl.com/apps/kodi/" target="_blank" rel="noopener">Kodi</a> ·
+          <a href="https://simkl.com/apps/emby/" target="_blank" rel="noopener">Emby</a> ·
+          <a href="https://simkl.com/apps/jellyfin/" target="_blank" rel="noopener">Jellyfin</a>
+        </p>
+      </details>
     </div>
   </section>
 
@@ -110,68 +95,82 @@
     <div class="passo-n">3</div>
     <div class="passo-corpo">
       <h2 data-t="g.p3"></h2>
-      <p data-t-html="g.p3d"></p>
-      <p class="nota" data-t="coll.durata"></p>
-      <p class="nota" data-t="g.p3nota"></p>
       <button class="btn btn-big" id="btnCollega" data-t="home.collegaOra"></button>
+      <details class="pieghevole">
+        <summary data-t="g.dettagli"></summary>
+        <p data-t-html="g.p3d"></p>
+        <p class="nota" data-t="coll.durata"></p>
+        <p class="nota" data-t="g.p3nota"></p>
+      </details>
     </div>
   </section>
 
   <hr class="guida-riga">
 
-  <!-- ============ COSA VEDI ============ -->
-  <h2 class="guida-h2" data-t="g.spaziT"></h2>
-  <p class="sezione-d" data-t="g.spaziD"></p>
-
+  <!-- ============ IL RESTO, TUTTO PIEGATO ============ -->
   <h2 class="guida-h2" data-t="g.cosaVedi"></h2>
-  <div class="tabella">
-    <div class="riga"><div class="cella-t" data-t="sez.watch"></div><div class="cella-d" data-t="sez.watch.aiuto"></div></div>
-    <div class="riga"><div class="cella-t" data-t="sez.pari"></div><div class="cella-d" data-t="sez.pari.aiuto"></div></div>
-    <div class="riga"><div class="cella-t" data-t="sez.scoprire"></div><div class="cella-d" data-t="sez.scoprire.aiuto"></div></div>
-    <div class="riga"><div class="cella-t" data-t="sez.pausa"></div><div class="cella-d" data-t="sez.pausa.aiuto"></div></div>
-    <div class="riga"><div class="cella-t" data-t="sez.inizia"></div><div class="cella-d" data-t="sez.inizia.aiuto"></div></div>
-    <div class="riga"><div class="cella-t" data-t="sez.archivio"></div><div class="cella-d" data-t="sez.archivio.aiuto"></div></div>
-  </div>
 
-  <h2 class="guida-h2" data-t="g.filmT"></h2>
-  <p class="sezione-d" data-t-html="g.filmD"></p>
+  <details class="pieghevole grande">
+    <summary data-t="g.spaziT"></summary>
+    <p data-t="g.spaziD"></p>
+  </details>
 
-  <h2 class="guida-h2" data-t="g.seguitiT"></h2>
-  <p class="sezione-d" data-t-html="g.seguitiD"></p>
+  <details class="pieghevole grande">
+    <summary data-t="g.leSezioni"></summary>
+    <div class="tabella">
+      <div class="riga"><div class="cella-t" data-t="sez.watch"></div><div class="cella-d" data-t="sez.watch.aiuto"></div></div>
+      <div class="riga"><div class="cella-t" data-t="sez.inizia"></div><div class="cella-d" data-t="sez.inizia.aiuto"></div></div>
+      <div class="riga"><div class="cella-t" data-t="sez.pausa"></div><div class="cella-d" data-t="sez.pausa.aiuto"></div></div>
+      <div class="riga"><div class="cella-t" data-t="sez.scoprire"></div><div class="cella-d" data-t="sez.scoprire.aiuto"></div></div>
+      <div class="riga"><div class="cella-t" data-t="sez.pari"></div><div class="cella-d" data-t="sez.pari.aiuto"></div></div>
+      <div class="riga"><div class="cella-t" data-t="sez.archivio"></div><div class="cella-d" data-t="sez.archivio.aiuto"></div></div>
+    </div>
+  </details>
 
-  <!-- ============ PASTIGLIE ============ -->
-  <h2 class="guida-h2" data-t="g.pastiglie"></h2>
-  <div class="tabella">
-    <div class="riga"><div class="cella-t"><span class="badge badge-new pos" data-t="bad.nuovo"></span></div><div class="cella-d" data-t="bad.nuovoAiuto"></div></div>
-    <div class="riga"><div class="cella-t"><span class="badge badge-count pos">+7</span></div><div class="cella-d" data-t="bad.conteggio"></div></div>
-    <div class="riga"><div class="cella-t"><span class="badge badge-back pos" data-t="bad.tornata"></span></div><div class="cella-d" data-t="bad.tornataAiuto"></div></div>
-    <div class="riga"><div class="cella-t"><span class="badge badge-done pos">&#10003;</span></div><div class="cella-d" data-t="bad.fattoAiuto"></div></div>
-    <div class="riga"><div class="cella-t"><span class="badge badge-soon pos">3 · 3</span></div><div class="cella-d" data-t="bad.prossimoAiuto"></div></div>
-  </div>
+  <details class="pieghevole grande">
+    <summary data-t="g.filmT"></summary>
+    <p data-t-html="g.filmD"></p>
+  </details>
 
-  <!-- ============ SOGLIE ============ -->
-  <h2 class="guida-h2" data-t="g.soglie"></h2>
-  <p class="sezione-d" data-t="imp.soglieSotto"></p>
-  <div class="tabella">
-    <div class="riga"><div class="cella-t">60</div><div class="cella-d" id="sogliaPausa"></div></div>
-    <div class="riga"><div class="cella-t">90</div><div class="cella-d" id="sogliaCalda"></div></div>
-    <div class="riga"><div class="cella-t">365</div><div class="cella-d" id="sogliaAbbandono"></div></div>
-    <div class="riga"><div class="cella-t">45</div><div class="cella-d" id="sogliaTornata"></div></div>
-  </div>
+  <details class="pieghevole grande">
+    <summary data-t="g.seguitiT"></summary>
+    <p data-t-html="g.seguitiD"></p>
+  </details>
+
+  <details class="pieghevole grande">
+    <summary data-t="g.pastiglie"></summary>
+    <div class="tabella">
+      <div class="riga"><div class="cella-t"><span class="badge badge-new pos" data-t="bad.nuovo"></span></div><div class="cella-d" data-t="bad.nuovoAiuto"></div></div>
+      <div class="riga"><div class="cella-t"><span class="badge badge-count pos">+7</span></div><div class="cella-d" data-t="bad.conteggio"></div></div>
+      <div class="riga"><div class="cella-t"><span class="badge badge-count pos">&times;3</span></div><div class="cella-d" data-t="bad.quanteAiuto"></div></div>
+      <div class="riga"><div class="cella-t"><span class="badge badge-back pos" data-t="bad.tornata"></span></div><div class="cella-d" data-t="bad.tornataAiuto"></div></div>
+      <div class="riga"><div class="cella-t"><span class="badge badge-done pos">&#10003;</span></div><div class="cella-d" data-t="bad.fattoAiuto"></div></div>
+      <div class="riga"><div class="cella-t"><span class="badge badge-soon pos">3 · 3</span></div><div class="cella-d" data-t="bad.prossimoAiuto"></div></div>
+    </div>
+  </details>
+
+  <details class="pieghevole grande">
+    <summary data-t="g.soglie"></summary>
+    <p data-t="imp.soglieSotto"></p>
+    <div class="tabella">
+      <div class="riga"><div class="cella-t">60</div><div class="cella-d" id="sogliaPausa"></div></div>
+      <div class="riga"><div class="cella-t">90</div><div class="cella-d" id="sogliaCalda"></div></div>
+      <div class="riga"><div class="cella-t">365</div><div class="cella-d" id="sogliaAbbandono"></div></div>
+      <div class="riga"><div class="cella-t">45</div><div class="cella-d" id="sogliaTornata"></div></div>
+    </div>
+  </details>
 
   <hr class="guida-riga">
 
   <!-- ============ DOMANDE ============ -->
   <h2 class="guida-h2" data-t="g.domande"></h2>
-  <div class="faq">
-    <h3 data-t="g.q1"></h3><p data-t-html="g.q1d"></p>
-    <h3 data-t="g.q2"></h3><p data-t-html="g.q2d"></p>
-    <h3 data-t="g.q3"></h3><p data-t-html="g.q3d"></p>
-    <h3 data-t="g.q4"></h3><p data-t-html="g.q4d"></p>
-    <h3 data-t="g.q5"></h3><p data-t-html="g.q5d"></p>
-    <h3 data-t="g.q6"></h3><p data-t-html="g.q6d"></p>
-    <h3 data-t="g.q7"></h3><p data-t-html="g.q7d"></p>
-  </div>
+  <details class="pieghevole"><summary data-t="g.q1"></summary><p data-t-html="g.q1d"></p></details>
+  <details class="pieghevole"><summary data-t="g.q2"></summary><p data-t-html="g.q2d"></p></details>
+  <details class="pieghevole"><summary data-t="g.q3"></summary><p data-t-html="g.q3d"></p></details>
+  <details class="pieghevole"><summary data-t="g.q4"></summary><p data-t-html="g.q4d"></p></details>
+  <details class="pieghevole"><summary data-t="g.q5"></summary><p data-t-html="g.q5d"></p></details>
+  <details class="pieghevole"><summary data-t="g.q6"></summary><p data-t-html="g.q6d"></p></details>
+  <details class="pieghevole"><summary data-t="g.q7"></summary><p data-t-html="g.q7d"></p></details>
 
   <p class="guida-fine">
     <a class="btn btn-big btn-largo" href="index.html" data-t="g.vaiAllaDash"></a>
@@ -179,12 +178,12 @@
 
 </main>
 
-<script src="js/lingua.js?v=22"></script>
-<script src="js/stato.js?v=22"></script>
-<script src="js/fonti.js?v=22"></script>
-<script src="js/regole.js?v=22"></script>
-<script src="js/carte.js?v=22"></script>
-<script src="js/telaio.js?v=22"></script>
+<script src="js/lingua.js?v=23"></script>
+<script src="js/stato.js?v=23"></script>
+<script src="js/fonti.js?v=23"></script>
+<script src="js/regole.js?v=23"></script>
+<script src="js/carte.js?v=23"></script>
+<script src="js/telaio.js?v=23"></script>
 <script>
 /* La guida è una pagina di testo, ma il pulsante "collega" deve funzionare
    anche da qui: chi finisce di leggere è esattamente la persona pronta a farlo,

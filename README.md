@@ -21,8 +21,13 @@ codice di pochi caratteri, lo inserisci sul sito del servizio e hai finito.
 
 Il collegamento vale per quel dispositivo: sul telefono lo rifai una volta.
 
-Il sito è in **italiano e inglese**. Le due lettere in alto a destra cambiano lingua
-senza ricaricare la pagina, e la scelta resta.
+Il sito è in **italiano e inglese**, e la lingua la sceglie da solo: chi ha il
+browser in italiano vede l'italiano, tutti gli altri l'inglese. Le due lettere in
+alto a destra la cambiano senza ricaricare la pagina, e la scelta resta.
+
+**Senza collegare niente non resti a bocca asciutta:** i tre spazi si aprono lo
+stesso, pieni di titoli d'esempio, con una fascia gialla che dice chiaramente che
+sono finti. Serve a capire a cosa serve il sito prima di doversi fidare.
 
 ---
 
@@ -51,16 +56,20 @@ alla schermata degli anime arriva da sola anche a quella dei film.
 
 ### Le sezioni delle serie
 
+L'ordine è quello in cui uno le usa davvero: prima le cose su cui puoi fare
+qualcosa stasera, poi quelle da scoprire, in fondo quelle dove non c'è niente da
+fare.
+
 | Sezione | Cosa contiene |
 |---|---|
 | **Da guardare ora** | Episodi usciti e non ancora visti. È la schermata principale. |
-| **In pari** | Hai visto tutti gli episodi usciti. Dove si sa, c'è la data del prossimo. |
-| **Da scoprire** | Roba che non hai in lista: seguiti, stagioni nuove, consigli, novità. |
-| **In pausa** | Hanno arretrati, ma sei fermo da troppo tempo. |
 | **Da iniziare** | Quello che hai in lista ma non hai mai aperto. |
+| **In pausa** | Hanno arretrati, ma sei fermo da troppo tempo. |
+| **Da scoprire** | Roba che non hai in lista: seguiti, stagioni nuove, consigli, novità. |
+| **In pari** | Hai visto tutti gli episodi usciti. Dove si sa, c'è la data del prossimo. |
 | **Archivio** | Niente di nuovo in vista. Diviso in *Finite* e *Abbandonate*. |
 
-Al primo avvio *Da guardare ora*, *In pari* e *Da scoprire* sono aperte; le altre
+Al primo avvio *Da guardare ora*, *Da scoprire* e *In pari* sono aperte; le altre
 chiuse. Si aprono con un clic sul titolo e restano come le lasci.
 
 ### Le sezioni dei film
@@ -71,8 +80,8 @@ non l'hai visto, è già uscito?
 | Sezione | Cosa contiene |
 |---|---|
 | **Da vedere** | In lista e già usciti. È la schermata principale dei film. |
-| **In arrivo** | In lista ma non ancora usciti, con la data. |
 | **Da scoprire** | Consigliati da chi ha visto i tuoi stessi film. |
+| **In arrivo** | In lista ma non ancora usciti, con la data. |
 | **Visti** | Quelli visti, e in fondo quelli **lasciati a metà**, che non sono la stessa cosa. |
 
 I film segnati "non mi interessa" non compaiono da nessuna parte: l'hai già detto tu.
@@ -239,8 +248,14 @@ Vale anche per i film, partendo da quelli che hai visto.
 
 Serie e anime partiti da poco, presi dalle premiere di Simkl.
 
+Su ogni suggerimento c'è una pastiglia che dice **perché è lì**: `×3` quanti dei tuoi
+titoli lo consigliano, `24 ep` quanti episodi ha, la data se sta per uscire, e
+TORNATA se è il seguito dichiarato di una che hai finito.
+
 Tutta la sezione si aggiorna una volta a settimana. Quello che hai già in lista non
-compare mai.
+compare mai. I consigli vengono tagliati **per tipo**, non tutti insieme: prima
+tenevo i primi quaranta e basta, e chi aveva tante serie si ritrovava lo spazio Film
+con "Da scoprire" perennemente vuoto.
 
 ---
 
@@ -264,6 +279,10 @@ invece di *Berserk*). Quello ufficiale in inglese sta solo nella scheda, campo
 `en_title`. Lo scarico in sottofondo per tutti, senza bloccare niente: la pagina è
 utilizzabile da subito e i titoli si sistemano mentre la usi. La ricerca funziona con
 tutti e due i nomi.
+
+**Quando scegli una sezione vuota dal menù.** Resta in pagina con la frase che spiega
+perché è vuota. Prima spariva, e ti trovavi lo schermo bianco senza capire se fosse
+un guasto.
 
 **Quando lo spazio del browser finisce.** Il salvataggio sacrifica in ordine: prima i
 consigli (si rifanno in una settimana), poi il calendario (5 ore), e per ultime le
@@ -309,6 +328,7 @@ immagini del tutto: lì il titolo è normale.
 | `index.html` `anime.html` `serie.html` `film.html` `impostazioni.html` `guida.html` | le sei pagine |
 | `app.css` | l'aspetto, per tutte |
 | `js/lingua.js` | il dizionario italiano/inglese e il motore delle traduzioni |
+| `js/esempio.js` | i titoli finti che vedi prima di collegare qualcosa |
 | `js/stato.js` | configurazione, memoria locale, utilità comuni |
 | `js/fonti.js` | Simkl, AniList, Trakt, calendario, schede, consigli e seguiti |
 | `js/regole.js` | dove finisce ogni titolo, e in che ordine |

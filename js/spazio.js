@@ -13,19 +13,24 @@
 
 'use strict';
 
+/* L'ordine e' quello in cui uno le usa davvero: prima le cose su cui puoi
+   fare qualcosa stasera (guardare, cominciare, riprendere), poi quelle da
+   scoprire, e in fondo quelle dove non c'e' niente da fare (sei in pari,
+   oppure e' finita). Prima "In pari" stava seconda e "Da iniziare" quinta,
+   che e' l'ordine con cui erano state scritte, non quello con cui si usano. */
 const SEZIONI_SERIE = [
   { id: 'watch',    nome: 'sez.watch',    aiuto: 'sez.watch.aiuto',    vuoto: 'sez.watch.vuoto',    principale: true, fasce: 'freschezza' },
-  { id: 'pari',     nome: 'sez.pari',     aiuto: 'sez.pari.aiuto',     vuoto: 'sez.pari.vuoto',     aperta: true },
-  { id: 'scoprire', nome: 'sez.scoprire', aiuto: 'sez.scoprire.aiuto', vuoto: 'sez.scoprire.vuoto', aperta: true, suggerimenti: true },
-  { id: 'pausa',    nome: 'sez.pausa',    aiuto: 'sez.pausa.aiuto',    vuoto: 'sez.pausa.vuoto',    aperta: false },
   { id: 'inizia',   nome: 'sez.inizia',   aiuto: 'sez.inizia.aiuto',   vuoto: 'sez.inizia.vuoto',   aperta: false },
+  { id: 'pausa',    nome: 'sez.pausa',    aiuto: 'sez.pausa.aiuto',    vuoto: 'sez.pausa.vuoto',    aperta: false },
+  { id: 'scoprire', nome: 'sez.scoprire', aiuto: 'sez.scoprire.aiuto', vuoto: 'sez.scoprire.vuoto', aperta: true, suggerimenti: true },
+  { id: 'pari',     nome: 'sez.pari',     aiuto: 'sez.pari.aiuto',     vuoto: 'sez.pari.vuoto',     aperta: true },
   { id: 'archivio', nome: 'sez.archivio', aiuto: 'sez.archivio.aiuto', vuoto: 'sez.archivio.vuoto', aperta: false, fasce: 'motivo' }
 ];
 
 const SEZIONI_FILM = [
   { id: 'daVedere', nome: 'sezF.daVedere', aiuto: 'sezF.daVedere.aiuto', vuoto: 'sezF.daVedere.vuoto', principale: true },
-  { id: 'inArrivo', nome: 'sezF.inArrivo', aiuto: 'sezF.inArrivo.aiuto', vuoto: 'sezF.inArrivo.vuoto', aperta: true },
   { id: 'scoprire', nome: 'sez.scoprire',  aiuto: 'sez.scoprire.aiuto',  vuoto: 'sez.scoprire.vuoto',  aperta: true, suggerimenti: true },
+  { id: 'inArrivo', nome: 'sezF.inArrivo', aiuto: 'sezF.inArrivo.aiuto', vuoto: 'sezF.inArrivo.vuoto', aperta: true },
   { id: 'visti',    nome: 'sezF.visti',    aiuto: 'sezF.visti.aiuto',    vuoto: 'sezF.visti.vuoto',    aperta: false, fasce: 'filmMotivo' }
 ];
 
@@ -37,15 +42,20 @@ function avviaSpazio(nome) {
   SP = { ...SPAZI[nome], nome };      // il nome dello spazio va messo per ultimo
   SEZIONI = SP.serie ? SEZIONI_SERIE : SEZIONI_FILM;
 
-  if (!collegato()) { location.replace('index.html'); return; }
+  /* Chi arriva senza aver collegato niente vedeva una pagina vuota, o veniva
+     rimbalzato sulla home. Adesso vede lo spazio pieno di titoli d'esempio:
+     capisce a cosa serve in due secondi, invece di doversi fidare. */
+  if (!collegato()) caricaEsempio();
 
   costruisciPagina();
   montaTelaio({ attiva: nome, alSync: () => aggiornaOra({ alDisegno: disegna }) });
   collegaControlli();
   disegna();
 
-  aggiornaOra({ alDisegno: disegna });
-  programmaAggiornamento();
+  if (!MODO_ESEMPIO) {
+    aggiornaOra({ alDisegno: disegna });
+    programmaAggiornamento();
+  }
 
   document.addEventListener('lingua-cambiata', () => { costruisciPagina(); collegaControlli(); disegna(); });
 }
@@ -86,6 +96,26 @@ function costruisciPagina() {
       nav.appendChild(fasce);
     }
   }
+
+  // fascia dell'esempio: dice chiaramente che quei titoli sono finti
+  const esempio = document.createElement('div');
+  esempio.className = 'avviso-esempio hidden';
+  esempio.id = 'avvisoEsempio';
+  const testoEsempio = document.createElement('span');
+  testoEsempio.innerHTML = t('demo.avviso');
+  const bColl = document.createElement('button');
+  bColl.className = 'btn btn-piccolo';
+  bColl.textContent = t('demo.collega');
+  bColl.onclick = () => apriCollegamento(() => { if (collegato()) location.reload(); });
+  esempio.append(testoEsempio, bColl);
+  main.appendChild(esempio);
+
+  // fascia dello scaricamento: la prima volta ci vuole qualche minuto e va detto
+  const caricamento = document.createElement('div');
+  caricamento.className = 'avviso-carico hidden';
+  caricamento.id = 'avvisoCarico';
+  caricamento.innerHTML = `<b>${escapeHtml(t('msg.scaricando'))}</b> ${escapeHtml(t('msg.scaricandoNota'))}`;
+  main.appendChild(caricamento);
 
   const avviso = document.createElement('div');
   avviso.className = 'filtro-attivo hidden';
@@ -199,6 +229,8 @@ function disegna() {
 
   aggiornaMenu(conti, gruppi[SEZIONI[0].id] || []);
   avvisoRicerca(q);
+  show('#avvisoEsempio', MODO_ESEMPIO);
+  show('#avvisoCarico', !MODO_ESEMPIO && ui.busy && !Object.keys(S.lib).length);
   applicaVista(conti);
   aggiornaTestata(gruppi);
 }
@@ -242,7 +274,7 @@ function disegnaSezione(sez, lista, modo) {
    "ho finito una serie e nessuno mi ha detto che il seguito esiste". */
 function disegnaSuggerimenti(sez) {
   const q = ui.search.trim().toLowerCase();
-  const ok = x => !S.nascoste[x.id] &&
+  const ok = x => !eNascosto(x) &&
     (x.tipo === SP.tipo) &&
     (!q || decodifica(x.title).toLowerCase().includes(q));
 
@@ -296,12 +328,16 @@ function applicaVista(conti) {
 
   for (const sez of SEZIONI) {
     const el = $('#sec-' + sez.id);
-    const visibile = (tutto || vista === sez.id) && (sez.principale || conti[sez.id] > 0);
+    /* Se hai scelto questa sezione dal menu' resta in pagina anche se e' vuota:
+       sparendo lasciava lo schermo bianco, e sembrava un guasto invece di una
+       sezione senza niente dentro. */
+    const scelta = !tutto && vista === sez.id;
+    const visibile = scelta || (tutto && (sez.principale || conti[sez.id] > 0));
     show(el, visibile);
-    if ((!tutto && vista === sez.id) || (q && conti[sez.id] > 0)) el.classList.remove('closed');
+    if (scelta || (q && conti[sez.id] > 0)) el.classList.remove('closed');
 
     const vuoto = $('#vuoto-' + sez.id);
-    const mostraVuoto = visibile && !conti[sez.id] && (sez.principale || vista === sez.id);
+    const mostraVuoto = visibile && !conti[sez.id] && (sez.principale || scelta);
     if (vuoto) {
       vuoto.textContent = t(sez.vuoto) + (mostraVuoto && q ? ' ' + t('ctrl.provaSvuotare') : '');
       show(vuoto, mostraVuoto);

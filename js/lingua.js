@@ -34,34 +34,42 @@ const DIZIONARIO = {
 
   /* ---------------- home / benvenuto ---------------- */
   'home.titolo':         ['Cosa devi guardare', 'What to watch'],
-  'home.sotto':          ['Una pagina che legge i tuoi account e ti dice cosa è uscito e non hai ancora visto. Gli episodi che guardi spariscono da soli, le serie che tornano dopo anni risalgono da sole.',
-                          'One page that reads your accounts and tells you what came out that you have not watched yet. Episodes you watch disappear on their own, shows that return after years come back up on their own.'],
+  'home.sotto':          ['Gli episodi usciti che non hai ancora visto, in un posto solo.',
+                          'Episodes that are out and you have not watched yet, all in one place.'],
+  'home.sotto2':         ['Quelli che guardi spariscono da soli. Le serie che tornano dopo anni risalgono da sole.',
+                          'The ones you watch disappear on their own. Shows that return after years come back up on their own.'],
   'home.iniziaQui':      ['Comincia da qui', 'Start here'],
   'home.nonCollegato':   ['Non hai ancora collegato nessun servizio.', 'You have not connected any service yet.'],
   'home.collegaOra':     ['Collega un servizio', 'Connect a service'],
   'home.leggiGuida':     ['Non so cos\'è, spiegamelo', 'I have no idea what this is, explain it'],
   'home.spaziTitolo':    ['I tuoi tre spazi', 'Your three spaces'],
-  'home.spaziSotto':     ['Anime, serie TV e film sono tenuti separati: ognuno ha il suo elenco, i suoi conti e il suo menù. Non si mescolano mai.',
-                          'Anime, TV shows and movies are kept apart: each has its own list, its own counts and its own menu. They never mix.'],
+  'home.spaziSotto':     ['Separati: ognuno ha il suo elenco e i suoi conti.',
+                          'Kept apart: each has its own list and its own counts.'],
   'home.spazioAnime':    ['Anime, con i seguiti e le stagioni nuove.', 'Anime, with sequels and new seasons.'],
   'home.spazioSerie':    ['Serie TV, dagli episodi arretrati all\'archivio.', 'TV shows, from your backlog to the archive.'],
   'home.spazioFilm':     ['Film da vedere, visti e in arrivo.', 'Movies to watch, watched and coming soon.'],
   'home.vuoto':          ['niente ancora', 'nothing yet'],
   'home.daVedere':       ['da vedere', 'to watch'],
   'home.serviziTitolo':  ['I servizi collegati', 'Connected services'],
-  'home.serviziSotto':   ['Puoi collegarne anche più di uno: quello che compare in due posti lo conto una volta sola.',
-                          'You can connect more than one: anything that shows up twice is counted once.'],
+  'home.serviziSotto':   ['Puoi collegarne più di uno. Quello che compare in due posti lo conto una volta sola.',
+                          'You can connect more than one. Anything that shows up twice is counted once.'],
   'home.gestisci':       ['Gestisci i collegamenti', 'Manage connections'],
   'home.comeFunziona':   ['Come funziona, in breve', 'How it works, in short'],
   'home.p1t':            ['Non tiene lei il conto', 'It does not keep score'],
-  'home.p1d':            ['Il conto degli episodi lo tengono Simkl, Trakt o AniList, che segnano da soli quello che guardi su Netflix, Crunchyroll e gli altri. Questa pagina legge quei dati e li rimette in ordine.',
-                          'Simkl, Trakt or AniList keep track of episodes, marking on their own what you watch on Netflix, Crunchyroll and the rest. This page reads that data and puts it back in order.'],
+  'home.p1d':            ['Il conto lo tiene Simkl, che segna da solo cosa guardi su Netflix e gli altri. Qui lo si legge e basta.',
+                          'Simkl keeps the count, marking on its own what you watch on Netflix and the rest. Here it is only read.'],
   'home.p2t':            ['Non scrive mai niente', 'It never writes anything'],
-  'home.p2d':            ['Sola lettura, su tutti i servizi. Nessun episodio segnato, nessuna serie spostata di lista, nessun voto.',
-                          'Read only, on every service. No episode marked, no show moved between lists, no ratings.'],
+  'home.p2d':            ['Sola lettura. Nessun episodio segnato, niente spostato di lista, nessun voto.',
+                          'Read only. No episode marked, nothing moved between lists, no ratings.'],
   'home.p3t':            ['I tuoi dati restano qui', 'Your data stays here'],
-  'home.p3d':            ['Non c\'è nessun server che li riceve: il collegamento e la tua libreria stanno nella memoria di questo browser, su questo dispositivo.',
-                          'There is no server receiving them: the connection and your library live in this browser\'s memory, on this device.'],
+  'home.p3d':            ['Nessun server li riceve: stanno nella memoria di questo browser, su questo dispositivo.',
+                          'No server receives them: they live in this browser\'s memory, on this device.'],
+
+  /* ---------------- modo esempio, per chi non ha ancora collegato ---------------- */
+  'demo.avviso':         ['Questo è un <b>esempio</b>: titoli finti, per farti vedere com\'è fatto. Collega un account e al loro posto compaiono i tuoi.',
+                          'This is an <b>example</b>: made-up titles, just to show you how it looks. Connect an account and yours take their place.'],
+  'demo.collega':        ['Collega il tuo account', 'Connect your account'],
+  'demo.eti':            ['esempio', 'example'],
 
   /* ---------------- collegamento ai servizi ---------------- */
   'coll.titolo':         ['Collega un servizio', 'Connect a service'],
@@ -162,6 +170,8 @@ const DIZIONARIO = {
   'ctrl.nascondiAiuto':  ['Non segnalarmela più', 'Stop suggesting this to me'],
   'ctrl.inPausa':        ['in pausa', 'pause'],
   'ctrl.riprendi':       ['riprendi', 'resume'],
+  'ctrl.nonOra':         ['non ora', 'not now'],
+  'ctrl.rimetti':        ['rimetti', 'put back'],
   'ctrl.inPausaAiuto':   ['Togli questo titolo dalla schermata principale. Vale solo qui: sul tuo account non cambia niente.',
                           'Take this title off the main screen. Only here: nothing changes on your account.'],
   'ctrl.riprendiAiuto':  ['Rimettilo fra quelli da guardare. Vale solo qui: sul tuo account non cambia niente.',
@@ -178,6 +188,9 @@ const DIZIONARIO = {
   'bad.fattoAiuto':      ['Hai visto tutto quello che è uscito finora', 'You have watched everything out so far'],
   'bad.animeAiuto':      ['È un anime', 'It is an anime'],
   'bad.completo':        ['Completo', 'All caught up'],
+  'bad.quanteAiuto':     ['Quanti dei tuoi titoli lo consigliano', 'How many of your titles recommend it'],
+  'bad.episodiAiuto':    ['Quanti episodi ha', 'How many episodes it has'],
+  'bad.seguitoAiuto':    ['È il seguito di una che hai finito', 'It is the sequel to one you finished'],
   'bad.visto':           ['Visto', 'Watched'],
   'bad.lasciato':        ['Lasciato a metà', 'Left unfinished'],
 
@@ -253,6 +266,9 @@ const DIZIONARIO = {
   'msg.aggiornatoMin':   ['aggiornato {n} min fa', 'updated {n} min ago'],
   'msg.aggiornatoQuando':['aggiornato {x}', 'updated {x}'],
   'msg.serveCollegare':  ['Collega prima un servizio', 'Connect a service first'],
+  'msg.scaricando':      ['Sto scaricando la tua libreria…', 'Downloading your library…'],
+  'msg.scaricandoNota':  ['La prima volta ci mette qualche minuto. Puoi già guardarti intorno.',
+                          'The first time takes a few minutes. You can already look around.'],
 
   /* ---------------- date in parole ---------------- */
   'data.oggi':           ['oggi', 'today'],
@@ -291,6 +307,11 @@ const DIZIONARIO = {
   'g.qualeServizio':     ['Quale servizio scegliere', 'Which service to pick'],
   'g.domande':           ['Domande', 'Questions'],
   'g.vaiAllaDash':       ['Vai alla dashboard', 'Go to the dashboard'],
+  'g.dettagli':          ['Se vuoi saperne di più', 'If you want to know more'],
+  'g.leSezioni':         ['Le sezioni, una per una', 'The sections, one by one'],
+  'g.inBreve':           ['In breve', 'In short'],
+  'g.riassunto':         ['Ti serve un account su un servizio che segni cosa guardi. Poi lo colleghi qui, una volta, e non ci pensi più.',
+                          'You need an account on a service that tracks what you watch. Then you connect it here, once, and never think about it again.'],
   'g.cosaVedi':          ['Cosa vedi, sezione per sezione', 'What you see, section by section'],
   'g.pastiglie':         ['Le pastiglie sul poster', 'The badges on the poster'],
   'g.soglie':            ['Le soglie, se vuoi metterci mano', 'The thresholds, if you want to tweak them'],
@@ -367,8 +388,18 @@ const LINGUE = ['it', 'en'];
    La scelta fatta a mano vince sempre e resta salvata. */
 function linguaIniziale(salvata) {
   if (LINGUE.includes(salvata)) return salvata;
-  const b = (navigator.language || 'it').slice(0, 2).toLowerCase();
-  return LINGUE.includes(b) ? b : 'it';
+  /* Guardo tutte le lingue del browser in ordine di preferenza, non solo la
+     prima: chi ha "en-GB, it-IT" vuole l'inglese, chi ha "it-IT, en-US" vuole
+     l'italiano. Chi non ha nessuna delle due prende l'inglese, che e' la
+     lingua che capisce piu' gente. */
+  const preferite = (navigator.languages && navigator.languages.length)
+    ? navigator.languages
+    : [navigator.language || 'en'];
+  for (const l of preferite) {
+    const due = String(l).slice(0, 2).toLowerCase();
+    if (LINGUE.includes(due)) return due;
+  }
+  return 'en';
 }
 
 let LINGUA = 'it';

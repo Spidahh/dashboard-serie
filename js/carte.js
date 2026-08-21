@@ -112,7 +112,12 @@ function carta(a, piccola, alCambio) {
     const versoPausa = a.sezione === 'watch' || a.sezione === 'daVedere';
     const b = document.createElement('button');
     b.className = 'card-act';
-    b.textContent = t(versoPausa ? 'ctrl.inPausa' : 'ctrl.riprendi');
+    /* "in pausa" su un film non vuol dire niente: un film non lo metti in pausa,
+       semmai lo rimandi. Parole diverse per una cosa diversa. */
+    const parole = a.film
+      ? (versoPausa ? 'ctrl.nonOra' : 'ctrl.rimetti')
+      : (versoPausa ? 'ctrl.inPausa' : 'ctrl.riprendi');
+    b.textContent = t(parole);
     b.title = t(versoPausa ? 'ctrl.inPausaAiuto' : 'ctrl.riprendiAiuto');
     b.onclick = () => {
       const m = S.meta[a.key] || (S.meta[a.key] = {});
@@ -241,14 +246,19 @@ function cartaSuggerita(x, alCambio) {
     poster.appendChild(f);
   }
   poster.appendChild(veloLink(dove));
+
+  /* Le pastiglie dicono in un colpo d'occhio perche' un suggerimento e' li':
+     quanti dei tuoi titoli lo consigliano, quanti episodi ha, quando esce. */
+  if (x.quante > 1) poster.appendChild(badge('badge-count', '\u00d7' + x.quante, t('bad.quanteAiuto')));
+  else if (x.episodi) poster.appendChild(badge('badge-count', x.episodi + ' ep', t('bad.episodiAiuto')));
   if (x.t) poster.appendChild(badge('badge-soon', when(x.t)));
-  if (x.certo) poster.appendChild(badge('badge-back', t('bad.tornata'), t('fascia.seguiti.nota')));
+  if (x.certo) poster.appendChild(badge('badge-back', t('bad.tornata'), t('bad.seguitoAiuto')));
 
   const b = document.createElement('button');
   b.className = 'card-act';
   b.textContent = t('ctrl.nascondi');
   b.title = t('ctrl.nascondiAiuto');
-  b.onclick = () => { S.nascoste[x.id] = true; save(); alCambio?.(); };
+  b.onclick = () => { S.nascoste[chiaveNascosta(x)] = true; save(); alCambio?.(); };
   poster.appendChild(b);
 
   const meta = document.createElement('div');

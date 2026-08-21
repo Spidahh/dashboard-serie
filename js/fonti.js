@@ -199,6 +199,7 @@ function merge(res) {
       e._type = tipo;
       e._id = id;
       e.show = scheda;                        // dentro al sito si chiama sempre "show"
+      delete e.movie;                         // era lo stesso oggetto due volte, salvato due volte
       S.lib[key] = e;
     }
   }
@@ -880,7 +881,11 @@ function semiPerConsigli() {
   return semi.slice(0, 10);
 }
 
-// I film da cui partire per i consigli: quelli che hai visto e ti sono piaciuti.
+/* I film da cui partire per i consigli: quelli che hai visto.
+   Prima pretendevo che avessero un voto o una data di visione, ma su Simkl
+   moltissimi film segnati come visti non hanno ne' l'uno ne' l'altra: il
+   risultato era zero semi, quindi zero consigli. Adesso vanno bene tutti,
+   e voto e data servono solo a decidere quali provare per primi. */
 function semiFilm() {
   const semi = [];
   for (const [k, e] of Object.entries(S.lib)) {
@@ -888,11 +893,10 @@ function semiFilm() {
     if (e.status !== 'completed') continue;
     const voto = e.user_rating || 0;
     const quando = e.last_watched_at ? Date.parse(e.last_watched_at) : 0;
-    if (!voto && !quando) continue;
     semi.push({ k, e, punti: voto * 1e12 + quando });
   }
   semi.sort((a, b) => b.punti - a.punti);
-  return semi.slice(0, 6);
+  return semi.slice(0, 8);
 }
 
 async function refreshConsigli({ force = false } = {}) {
@@ -954,9 +958,15 @@ async function refreshConsigli({ force = false } = {}) {
     await sleep(200);
   }
 
-  S.simili = [...punteggi.values()]
-    .sort((a, b) => b.quante - a.quante || b.punti - a.punti)
-    .slice(0, 40);
+  /* Il taglio va fatto PER TIPO, non su tutto insieme. Prima tenevo i primi 40
+     e basta: chi ha tante serie si ritrovava quaranta serie e zero film, quindi
+     "Da scoprire" nello spazio Film restava vuoto anche avendo dei consigli. */
+  const ordinati = [...punteggi.values()].sort((a, b) => b.quante - a.quante || b.punti - a.punti);
+  const quanti = {};
+  S.simili = ordinati.filter(x => {
+    quanti[x.tipo] = (quanti[x.tipo] || 0) + 1;
+    return quanti[x.tipo] <= 20;
+  });
 
   await cercaSeguiti(semi, mie);
 

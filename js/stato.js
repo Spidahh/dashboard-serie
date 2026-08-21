@@ -90,6 +90,11 @@ let S = {
 
 let ui = { search: '', busy: false, pinTimer: null, refreshTimer: null };
 
+/* Quando la pagina mostra i titoli d'esempio (chi non ha ancora collegato
+   niente) la memoria del browser non si tocca: quella roba e' finta e non
+   deve sopravvivere al collegamento vero. */
+let MODO_ESEMPIO = false;
+
 /* ---------------- salvataggio locale ---------------- */
 
 function load() {
@@ -118,6 +123,7 @@ function load() {
 }
 
 function save() {
+  if (MODO_ESEMPIO) return;
   try {
     localStorage.setItem(CFG.storeKey, JSON.stringify(S));
     return;
@@ -243,6 +249,19 @@ function giaInLibreria() {
     ids, titoli,
     ha: (id, tipo, nome) => ids.has(String(id)) || titoli.has(tipo + '|' + normalizza(nome))
   };
+}
+
+/* La chiave con cui ricordo un suggerimento nascosto. Prima era il solo id, ma
+   gli id di Simkl, AniList e Trakt sono numerazioni diverse: nascondere un
+   consiglio poteva farne sparire un altro che per caso aveva lo stesso numero. */
+function chiaveNascosta(x) {
+  return (x.fonte || 'sk') + ':' + x.tipo + ':' + x.id;
+}
+
+function eNascosto(x) {
+  // la vecchia forma, il solo id, la riconosco ancora: non voglio far riapparire
+  // roba che avevi gia' tolto prima di questo cambiamento
+  return !!(S.nascoste[chiaveNascosta(x)] || S.nascoste[x.id]);
 }
 
 // La ricerca deve funzionare con tutti i nomi che un titolo ha.
