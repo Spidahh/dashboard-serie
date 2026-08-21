@@ -83,33 +83,41 @@ let NOMI_AMBIGUI = new Map();
 
 function segnalaOmonimi(mappa) { NOMI_AMBIGUI = mappa; }
 
-/* Trova i titoli che compaiono piu' di una volta, e decide come distinguerli. */
+/* Prende una lista di { nome, anno, episodi, tipo } e decide, per ogni nome
+   ripetuto, quanto serve aggiungere per distinguerlo. Tre livelli, perche' un
+   criterio solo non basta sempre: di solito l'anno risolve, ogni tanto servono
+   anche gli episodi, e in un caso su venticinque nemmeno quelli. */
 function trovaOmonimi(voci) {
   const per = new Map();
-  for (const [key, e] of voci) {
-    const n = normalizza(titolo(key, e));
+  for (const v of voci) {
+    const n = normalizza(v.nome);
     if (!n) continue;
     if (!per.has(n)) per.set(n, []);
-    per.get(n).push(e);
+    per.get(n).push(v);
   }
   const out = new Map();
   for (const [n, lista] of per) {
     if (lista.length < 2) continue;
-    const anni = new Set(lista.map(e => e.show?.year));
-    out.set(n, anni.size === lista.length ? 'anno' : 'episodi');
+    const anni = new Set(lista.map(v => v.anno));
+    if (anni.size === lista.length) { out.set(n, 'anno'); continue; }
+    const conEpisodi = new Set(lista.map(v => v.anno + '|' + v.episodi));
+    out.set(n, conEpisodi.size === lista.length ? 'episodi' : 'tipo');
   }
   return out;
 }
 
-function nomeCarta(key, e) {
-  const n = titolo(key, e);
-  const come = NOMI_AMBIGUI.get(normalizza(n));
-  if (!come) return n;
+function distingui(nome, anno, episodi, tipo) {
+  const come = NOMI_AMBIGUI.get(normalizza(nome));
+  if (!come) return nome;
   const pezzi = [];
-  if (e.show?.year) pezzi.push(e.show.year);
-  if (come === 'episodi' && e.total_episodes_count) pezzi.push(e.total_episodes_count + ' ep');
-  return pezzi.length ? `${n} (${pezzi.join(' \u00b7 ')})` : n;
+  if (anno) pezzi.push(anno);
+  if (come !== 'anno' && episodi) pezzi.push(episodi + ' ep');
+  if (come === 'tipo' && tipo) pezzi.push(tipo);
+  return pezzi.length ? `${nome} (${pezzi.join(' \u00b7 ')})` : nome;
 }
+
+const nomeCarta = (key, e) =>
+  distingui(titolo(key, e), e.show?.year, e.total_episodes_count, e.anime_type);
 
 /* ---------------- la carta di un titolo che hai ---------------- */
 
@@ -269,7 +277,10 @@ function rigaFilm(sub, a, scheda) {
 /* ---------------- la carta di un suggerimento ---------------- */
 
 function cartaSuggerita(x, alCambio) {
-  const nome = decodifica(x.title);
+  /* Anche i suggerimenti passano di qui: ti veniva consigliato "Hunter x Hunter"
+     del 1999 mentre in archivio avevi "Hunter x Hunter" del 2011, con lo stesso
+     identico nome su due card diverse. */
+  const nome = distingui(decodifica(x.title), x.anno, x.episodi, null);
   const dove = x.fonte === 'anilist'
     ? `https://anilist.co/anime/${x.id}`
     : `https://simkl.com/${x.tipo === 'anime' ? 'anime' : x.tipo === 'movies' ? 'movies' : 'tv'}/${x.id}/${x.slug || ''}`;

@@ -219,7 +219,15 @@ function disegna() {
     const a = analizza(key, e, adesso);
     if (a.sezione && gruppi[a.sezione]) gruppi[a.sezione].push(a);
   }
-  segnalaOmonimi(trovaOmonimi(vociSpazio));
+  /* Nella conta degli omonimi entrano anche i suggerimenti: il doppione poteva
+     essere fra una card della libreria e una consigliata, non solo fra due tue. */
+  const perOmonimi = vociSpazio.map(([k, e]) => ({
+    nome: titolo(k, e), anno: e.show?.year, episodi: e.total_episodes_count, tipo: e.anime_type
+  }));
+  for (const x of suggerimentiDelloSpazio()) {
+    perOmonimi.push({ nome: decodifica(x.title), anno: x.anno, episodi: x.episodi, tipo: null });
+  }
+  segnalaOmonimi(trovaOmonimi(perOmonimi));
 
   const modo = S.settings.sort[SP.nome] || 'recent';
   for (const id of Object.keys(gruppi)) {
@@ -285,6 +293,13 @@ function disegnaSezione(sez, lista, modo) {
 /* Le quattro fasce dei suggerimenti, in ordine di quanto probabilmente ti
    interessano. I seguiti stanno per primi apposta: sono la risposta a
    "ho finito una serie e nessuno mi ha detto che il seguito esiste". */
+/* Tutti i suggerimenti di questo spazio in un elenco solo: serve sia a
+   disegnarli sia a contare gli omonimi prima di disegnare. */
+function suggerimentiDelloSpazio() {
+  return [...(S.seguiti || []), ...(S.nuove || []), ...(S.simili || []), ...(S.novita || [])]
+    .filter(x => x.tipo === SP.tipo && !eNascosto(x));
+}
+
 function disegnaSuggerimenti(sez) {
   const q = ui.search.trim().toLowerCase();
   const ok = x => !eNascosto(x) &&
