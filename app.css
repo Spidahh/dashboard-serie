@@ -534,7 +534,9 @@ main { min-width: 0; }
 .badge-back  { top: 8px; left: 8px; background: var(--ok); color: #06251a; letter-spacing: .04em; }
 .badge-soon  { top: 8px; left: 8px; background: rgba(10, 14, 20, .82); color: var(--warm); font-weight: 600; }
 .badge-done  { top: 8px; left: 8px; background: var(--ok); color: #06251a; font-size: 13px; padding: 4px 8px; }
-.badge-type  { bottom: 8px; left: 8px; background: rgba(10, 14, 20, .78); color: var(--txt-2); font-weight: 600; }
+/* Neutro apposta: il rosso qui sopra vuol dire "hai roba arretrata", e un
+   consiglio non e' una cosa arretrata. */
+.badge-info  { top: 8px; right: 8px; background: rgba(10, 14, 20, .82); color: var(--txt); font-weight: 600; }
 
 .meta { padding: 9px 2px 0; }
 .title {
@@ -710,10 +712,8 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 20px 0; }
   .grid-sm { grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); }
   .brand { font-size: 18px; }
 
-  /* Sul telefono il pulsante è sempre visibile: la pastiglia del tipo starebbe
-     sotto e le due si accavallano. Il tipo lo dicono già i filtri in alto. */
+  /* Sul telefono il pulsante resta sempre visibile: non c'e' il passaggio del mouse. */
   .card-act { opacity: 1; font-size: 10.5px; padding: 3px 6px; }
-  .badge-type { display: none; }
   .search { flex: 1 1 100%; }
 }
 

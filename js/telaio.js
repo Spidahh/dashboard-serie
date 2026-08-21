@@ -91,7 +91,10 @@ async function aggiornaOra({ full = false, alDisegno = null } = {}) {
     const esito = await sync({
       full,
       quando: (che, testo) => {
-        if (che === 'disegna') alDisegno?.();
+        // 'inizio' serve a far comparire la fascia "sto scaricando": senza un
+        // ridisegno qui, quella fascia non si vedeva mai al primo avvio, che e'
+        // esattamente l'unico momento in cui serviva.
+        if (che === 'disegna' || che === 'inizio') alDisegno?.();
         else if (che === 'avanzamento' && $('#syncInfo')) $('#syncInfo').textContent = testo;
         else if (che === 'fine') { bottone?.classList.remove('spin'); aggiornaInfoSync(); }
       }
@@ -103,7 +106,7 @@ async function aggiornaOra({ full = false, alDisegno = null } = {}) {
       toast(t('msg.scadutoSimkl'));
       alDisegno?.();
     } else {
-      toast(e.message.includes(' ') ? e.message : t('msg.errore', { x: e.message }));
+      toast(e.tradotto ? e.message : t('msg.errore', { x: e.message }));
       console.error(e);
     }
   } finally {

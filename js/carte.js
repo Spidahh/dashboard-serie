@@ -58,8 +58,7 @@ const SPIEGA_PASTIGLIA = {
   'badge-new': 'bad.nuovoAiuto',
   'badge-back': 'bad.tornataAiuto',
   'badge-soon': 'bad.prossimoAiuto',
-  'badge-done': 'bad.fattoAiuto',
-  'badge-type': 'bad.animeAiuto'
+  'badge-done': 'bad.fattoAiuto'
 };
 
 function badge(cls, testo, spiega) {
@@ -171,13 +170,20 @@ function pastiglieSerie(poster, a) {
     if (a.inArrivoIl) poster.appendChild(badge('badge-soon', when(a.inArrivoIl)));
     else poster.appendChild(badge('badge-done', '✓'));
   }
-  if (a.e._type === 'anime') poster.appendChild(badge('badge-type', t('bad.anime')));
+  /* Il bollino ANIME non c'e' piu': serviva quando anime e serie TV stavano
+     nello stesso elenco. Adesso lo spazio Anime contiene solo anime, quindi
+     scriverlo su ognuno era una parola ripetuta dodici volte per niente. */
 }
 
 function pastiglieFilm(poster, a) {
-  // la spunta solo su quelli visti davvero: su uno mollato a meta' direbbe il falso
-  if (a.sezione === 'visti' && a.e.status !== 'dropped') poster.appendChild(badge('badge-done', '✓'));
-  else if (a.sezione === 'inArrivo' && a.inArrivoIl) poster.appendChild(badge('badge-soon', when(a.inArrivoIl)));
+  /* Le spiegazioni dei film devono parlare di film. Prima ereditavano quelle
+     delle serie: sotto la spunta di un film c'era scritto "hai visto tutti gli
+     episodi usciti", e sotto la data "quando esce il prossimo episodio". */
+  if (a.sezione === 'visti' && a.e.status !== 'dropped') {
+    poster.appendChild(badge('badge-done', '\u2713', t('bad.filmVistoAiuto')));
+  } else if (a.sezione === 'inArrivo' && a.inArrivoIl) {
+    poster.appendChild(badge('badge-soon', when(a.inArrivoIl), t('bad.escoAiuto')));
+  }
 }
 
 function rigaSerie(sub, a, scheda) {
@@ -247,12 +253,25 @@ function cartaSuggerita(x, alCambio) {
   }
   poster.appendChild(veloLink(dove));
 
-  /* Le pastiglie dicono in un colpo d'occhio perche' un suggerimento e' li':
-     quanti dei tuoi titoli lo consigliano, quanti episodi ha, quando esce. */
-  if (x.quante > 1) poster.appendChild(badge('badge-count', '\u00d7' + x.quante, t('bad.quanteAiuto')));
-  else if (x.episodi) poster.appendChild(badge('badge-count', x.episodi + ' ep', t('bad.episodiAiuto')));
-  if (x.t) poster.appendChild(badge('badge-soon', when(x.t)));
-  if (x.certo) poster.appendChild(badge('badge-back', t('bad.tornata'), t('bad.seguitoAiuto')));
+  /* Le pastiglie dicono in un colpo d'occhio perche' un suggerimento e' li'.
+     Due regole imparate misurandole:
+
+     - un angolo, un bollino. In alto a sinistra ci vanno sia il seguito sia la
+       data, e quando un titolo aveva tutti e due si stampavano uno sopra
+       all'altro. Adesso vince il seguito, e la data resta scritta qui sotto.
+     - il rosso vuol dire "hai roba arretrata". Usarlo anche per "te lo
+       consigliano in quattro" faceva sembrare urgente un consiglio: quello ha
+       un colore suo, neutro. */
+  const quanti = x.quante > 1 ? '\u00d7' + x.quante : (x.episodi ? x.episodi + ' ep' : null);
+  if (quanti) {
+    poster.appendChild(badge('badge-info', quanti, t(x.quante > 1 ? 'bad.quanteAiuto' : 'bad.episodiAiuto')));
+  }
+  if (x.certo) {
+    // "TORNATA" e' la parola per una serie tua che riparte: questo non ce l'hai
+    poster.appendChild(badge('badge-back', t('bad.seguito'), t('bad.seguitoAiuto')));
+  } else if (x.t) {
+    poster.appendChild(badge('badge-soon', when(x.t), t(x.t > Date.now() ? 'bad.escoAiuto' : 'bad.uscitoAiuto')));
+  }
 
   const b = document.createElement('button');
   b.className = 'card-act';

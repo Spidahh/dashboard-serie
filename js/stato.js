@@ -170,6 +170,15 @@ const SERVIZI = [
 /* ---------------- utilità comuni ---------------- */
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* Un errore gia' scritto in una lingua che si capisce. Serve a distinguerlo da
+   quelli tecnici tipo "API 500": prima li riconoscevo a occhio, controllando se
+   il messaggio conteneva uno spazio, e "API 500" ne ha uno. */
+function erroreUtente(msg) {
+  const e = new Error(msg);
+  e.tradotto = true;
+  return e;
+}
 const $ = sel => document.querySelector(sel);
 const pad = n => String(n).padStart(2, '0');
 

@@ -200,6 +200,9 @@ Quattro fasce, in ordine di quanto probabilmente ti interessano.
 
 ### 1. Il seguito di quello che hai finito
 
+Vale anche per i film: *Dune: Part Two* è il seguito di *Dune* esattamente come una
+seconda stagione lo è della prima.
+
 **Questo è il pezzo nuovo, ed è nato da un caso preciso: 7 Seeds.**
 
 Prima i seguiti li cercavo **solo nel calendario dei prossimi 33 giorni**. Vuol dire
@@ -250,7 +253,8 @@ Serie e anime partiti da poco, presi dalle premiere di Simkl.
 
 Su ogni suggerimento c'è una pastiglia che dice **perché è lì**: `×3` quanti dei tuoi
 titoli lo consigliano, `24 ep` quanti episodi ha, la data se sta per uscire, e
-TORNATA se è il seguito dichiarato di una che hai finito.
+**SEGUITO** se è il seguito di una che hai finito. Un angolo, una pastiglia: dove ne
+finirebbero due, vince quella che dice di più e l'altra scende nella riga sotto.
 
 Tutta la sezione si aggiorna una volta a settimana. Quello che hai già in lista non
 compare mai. I consigli vengono tagliati **per tipo**, non tutti insieme: prima

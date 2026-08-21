@@ -148,7 +148,7 @@ function costruisciPagina() {
       h.appendChild(caret);
       h.onclick = () => {
         s.classList.toggle('closed');
-        S.settings.aperte[s.id] = !s.classList.contains('closed');
+        S.settings.aperte[chiaveAperta(sez.id)] = !s.classList.contains('closed');
         save();
       };
     }
@@ -177,12 +177,19 @@ function costruisciPagina() {
 
 /* Le sezioni restano come le hai lasciate. Quelle che non hai mai toccato
    partono da quello che dice la tabella qui sopra. */
+/* La chiave porta dentro anche lo spazio: gli spazi sono separati, quindi
+   chiudere l'Archivio degli anime non deve chiudere anche quello dei film.
+   Prima la chiave era la sola sezione, ed erano legati fra loro. */
+const chiaveAperta = idSezione => SP.nome + ':' + idSezione;
+
 function applicaAperte() {
   for (const sez of SEZIONI) {
     if (sez.principale) continue;
     const el = $('#sec-' + sez.id);
     if (!el) continue;
-    const scelta = S.settings.aperte['sec-' + sez.id];
+    const a = S.settings.aperte;
+    // la chiave vecchia la leggo ancora, per non perdere le scelte gia' fatte
+    const scelta = a[chiaveAperta(sez.id)] !== undefined ? a[chiaveAperta(sez.id)] : a['sec-' + sez.id];
     el.classList.toggle('closed', !(scelta !== undefined ? scelta : sez.aperta));
   }
 }

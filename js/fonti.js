@@ -62,16 +62,16 @@ async function startPin(alPronto) {
   try {
     init = await api('/oauth/pin', {}, { auth: false });
   } catch (e) {
-    throw new Error(t('err.noSimkl', { x: e.message }));
+    throw erroreUtente(t('err.noSimkl', { x: e.message }));
   }
-  if (!init || init.result !== 'OK' || !init.user_code) throw new Error(t('err.noCodice'));
+  if (!init || init.result !== 'OK' || !init.user_code) throw erroreUtente(t('err.noCodice'));
 
   const scadenza = Date.now() + (init.expires_in || 900) * 1000;
   const ogni = (init.interval || 5) * 1000;
 
   clearInterval(ui.pinTimer);
   ui.pinTimer = setInterval(async () => {
-    if (Date.now() > scadenza) { stopPin(); return alPronto(new Error(t('coll.scaduto'))); }
+    if (Date.now() > scadenza) { stopPin(); return alPronto(erroreUtente(t('coll.scaduto'))); }
     try {
       const r = await api('/oauth/pin/' + encodeURIComponent(init.user_code), {}, { auth: false });
       // Se il codice è già stato consumato Simkl ne restituisce uno nuovo: non è un token.
@@ -461,7 +461,7 @@ const AL_QUERY = `query($id:Int){
 
 function alLogin() {
   const id = CFG.anilist.clientId;
-  if (!id) throw new Error(t('err.anilistSpento'));
+  if (!id) throw erroreUtente(t('err.anilistSpento'));
   location.href = `${CFG.anilist.auth}?client_id=${encodeURIComponent(id)}&response_type=token`;
 }
 
@@ -534,7 +534,7 @@ async function syncAniList() {
     if (err.message === 'AL_SCADUTO') {
       S.al = { token: null, user: null };
       save();
-      throw new Error(t('msg.scadutoAl'));
+      throw erroreUtente(t('msg.scadutoAl'));
     }
     console.warn('AniList:', err.message);
   }
@@ -649,7 +649,7 @@ async function tkChiedi(percorso, params = {}) {
 
 // Chiedo un codice. Questa chiamata non ha bisogno di segreti.
 async function tkLogin(alPronto) {
-  if (!tkDisponibile()) throw new Error(t('err.traktSpento'));
+  if (!tkDisponibile()) throw erroreUtente(t('err.traktSpento'));
   let init;
   try {
     const r = await fetch(CFG.trakt.api + '/oauth/device/code', {
@@ -658,15 +658,15 @@ async function tkLogin(alPronto) {
       body: JSON.stringify({ client_id: CFG.trakt.clientId })
     });
     init = await r.json();
-  } catch (e) { throw new Error(t('err.noTrakt')); }
-  if (!init || !init.user_code) throw new Error(t('err.noCodice'));
+  } catch (e) { throw erroreUtente(t('err.noTrakt')); }
+  if (!init || !init.user_code) throw erroreUtente(t('err.noCodice'));
 
   const fine = Date.now() + (init.expires_in || 600) * 1000;
   const ogni = (init.interval || 5) * 1000;
 
   clearInterval(ui.pinTimer);
   ui.pinTimer = setInterval(async () => {
-    if (Date.now() > fine) { stopPin(); return alPronto(new Error(t('coll.scaduto'))); }
+    if (Date.now() > fine) { stopPin(); return alPronto(erroreUtente(t('coll.scaduto'))); }
     try {
       const r = await fetch(CFG.trakt.worker, {
         method: 'POST',
@@ -758,7 +758,7 @@ async function syncTrakt({ giaRinnovato = false } = {}) {
       if (!giaRinnovato && await tkRinnova()) return syncTrakt({ giaRinnovato: true });
       S.tk = { token: null, refresh: null, scade: 0 };
       save();
-      throw new Error(t('msg.scadutoTk'));
+      throw erroreUtente(t('msg.scadutoTk'));
     }
     console.warn('Trakt:', err.message);
   }
@@ -968,7 +968,7 @@ async function refreshConsigli({ force = false } = {}) {
     return quanti[x.tipo] <= 20;
   });
 
-  await cercaSeguiti(semi, mie);
+  await cercaSeguiti([...semi, ...semiFilm()], mie);
 
   // le appena uscite
   const novita = [];
@@ -1005,11 +1005,13 @@ async function cercaSeguiti(semi, mie) {
     trovati.set('al:' + s.id, { ...s, certo: true });
   }
 
-  // poi quelli cercati per nome, sulle serie Simkl
+  /* poi quelli cercati per nome. Vale anche per i film: "Dune: Part Two" e'
+     il seguito di "Dune" esattamente come una seconda stagione lo e' della
+     prima, e prima i film restavano fuori perche' i semi erano solo serie. */
   for (const seme of semi) {
     const r = radice(titolo(seme.k, seme.e));
     if (r.length < 5) continue;
-    const percorso = seme.e._type === 'anime' ? 'anime' : 'tv';
+    const percorso = seme.e._type === 'anime' ? 'anime' : seme.e._type === 'movies' ? 'movie' : 'tv';
     const annoSeme = seme.e.show?.year || 0;
     try {
       const arr = await api(`/search/${percorso}`, { q: r, limit: 12 }, { auth: false });

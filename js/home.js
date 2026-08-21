@@ -96,7 +96,8 @@ function disegnaSpazi() {
     const c = conti?.[nome];
     if (!c || !c.titoli) {
       n.classList.add('vuoto');
-      n.textContent = t('home.vuoto');
+      // se non hai collegato niente, dietro a quella carta c'e' comunque l'esempio
+      n.textContent = t(collegato() ? 'home.vuoto' : 'home.guardaEsempio');
     } else {
       n.textContent = c.titoli;
       const eti = document.createElement('span');
