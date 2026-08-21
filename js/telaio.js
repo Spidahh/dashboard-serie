@@ -68,6 +68,8 @@ function cambiaLingua(l) {
   save();
   applicaLingua();
   for (const b of document.querySelectorAll('[data-lingua]')) b.classList.toggle('on', b.dataset.lingua === LINGUA);
+  // le righe dei servizi sono costruite a mano: applicaLingua non le raggiunge
+  if (finestraColl && !finestraColl.classList.contains('hidden')) disegnaServiziColl();
   document.dispatchEvent(new CustomEvent('lingua-cambiata'));
 }
 
@@ -110,7 +112,8 @@ async function aggiornaOra({ full = false, alDisegno = null } = {}) {
       console.error(e);
     }
   } finally {
-    bottone?.classList.remove('spin');
+    // se un altro aggiornamento e' ancora in corso la rotella deve continuare a girare
+    if (!ui.busy) bottone?.classList.remove('spin');
     aggiornaInfoSync();
   }
 }
@@ -136,6 +139,9 @@ function costruisciFinestraColl() {
   const box = document.createElement('div');
   box.className = 'modal hidden';
   box.id = 'modaleColl';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', t('coll.titolo'));
   box.innerHTML = `
     <div class="modal-box">
       <h2 data-t="coll.titolo"></h2>
@@ -161,6 +167,14 @@ function costruisciFinestraColl() {
   document.body.appendChild(box);
   box.onclick = ev => { if (ev.target === box) chiudiCollegamento(); };
   box.querySelector('#colChiudi').onclick = chiudiCollegamento;
+
+  /* Esc chiude, da qualunque pagina. Prima lo gestiva solo il codice degli
+     spazi, quindi sulla home, nelle impostazioni e nella guida la finestra
+     restava li'. Dentro agli spazi questo scatta dopo, e trova gia' chiuso. */
+  document.addEventListener('keydown', ev => {
+    if (ev.key === 'Escape' && !box.classList.contains('hidden')) chiudiCollegamento();
+  });
+
   applicaLingua(box);
   return box;
 }

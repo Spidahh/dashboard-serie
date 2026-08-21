@@ -1,15 +1,20 @@
 {
   "name": "Dashboard Serie",
   "short_name": "Serie",
-  "description": "Gli episodi da vedere, presi dall'account Simkl.",
+  "description": "Gli episodi usciti che non hai ancora visto. Anime, serie TV e film, ognuno col suo spazio.",
+  "lang": "it",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait-primary",
   "background_color": "#0e1116",
   "theme_color": "#0e1116",
   "icons": [
     { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
     { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Anime",    "url": "./anime.html" },
+    { "name": "Serie TV", "url": "./serie.html" },
+    { "name": "Film",     "url": "./film.html" }
   ]
 }

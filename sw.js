@@ -5,7 +5,7 @@
    sia il nome della cache sia gli indirizzi dello shell.
    Va tenuto uguale al ?v= di index.html e guida.html. Se qualcuno se ne dimentica
    uno, app.js se ne accorge da solo e lo scrive nella console. */
-const VERSIONE = '24';
+const VERSIONE = '28';
 
 const CACHE = 'dashboard-serie-v' + VERSIONE;
 // gli stessi indirizzi che chiedono le pagine, numero di versione compreso

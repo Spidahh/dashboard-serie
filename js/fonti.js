@@ -109,9 +109,12 @@ const TIPI_SIMKL = ['shows', 'anime', 'movies'];
 async function sync({ full = false, quando } = {}) {
   if (ui.busy) return;
   ui.busy = true;
-  quando?.('inizio');
 
   try {
+    /* Dentro al try, non prima: 'inizio' fa ridisegnare la pagina, e se il
+       disegno inciampa fuori di qui ui.busy resta acceso per sempre e non si
+       sincronizza piu' niente fino a che non ricarichi. */
+    quando?.('inizio');
     // senza Simkl restano le altre fonti: giro più corto
     if (!S.token) {
       await syncAniList();

@@ -700,21 +700,57 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 20px 0; }
   #ordina { min-width: 0; flex: 1; }
   .campo { flex: 1 1 auto; }
   .brand-box { flex: 1 1 100%; }
+  .sync-info { display: none; }   /* la cosa meno importante della testata */
+
+  /* Lo spaziatore serve a spingere i comandi a destra quando la riga sta tutta
+     su una linea. Quando la riga va a capo diventa il contrario: si prende lo
+     spazio avanzato e costringe il pezzo dopo a scendere di riga da solo. */
+  .topbar-row .spacer { display: none; }
 }
 
 @media (max-width: 560px) {
-  .spazi a { padding: 7px 10px; font-size: 13px; }
-  .lingua-switch button { padding: 8px 7px; }
+  /* Sul telefono la testata si mangiava il 41% dello schermo prima di far
+     vedere una card: 83px di prima riga, 146px di seconda, 53px di menu'.
+     Misurato dentro a un iframe da 375px, non a occhio. */
+
+  /* Il nome dello spazio e' gia' acceso nella navigazione qui sopra: qui si
+     prendeva una riga intera per ripeterlo. Lo tolgo dagli occhi ma non dagli
+     screen reader, perche' resta l'unico titolo della pagina. */
+  .brand {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  /* ricerca e ordinamento stanno su una riga sola invece che su due */
+  .search { flex: 2 1 150px; order: 0; }
+  /* min-width:0 e' la parte che conta. Un elemento flex, di suo, non scende mai
+     sotto la larghezza del suo contenuto piu' largo: qui dentro c'e' un menu' a
+     tendina con scritto "Episodio uscito da meno tempo", quindi .campo chiedeva
+     250px e mandava la ricerca a capo da sola. */
+  .campo { flex: 1 1 120px; min-width: 0; }
+  .campo-eti { display: none; }
+
+  /* bersagli grandi abbastanza per un pollice */
+  .topbar-row { gap: 8px; }
+  .spazi a { padding: 9px 9px; font-size: 12.5px; }
+  .spazi { gap: 3px; }
+  .lingua-switch button { padding: 11px 12px; }
+  .icon-btn { width: 42px; height: 42px; }
+  .marchio img { width: 30px; height: 30px; }
 }
 
 @media (max-width: 560px) {
+  /* Questo blocco riguarda solo la griglia e le card. Le regole della testata
+     stanno tutte nel blocco 560 qui sopra: prima erano sparse fra i due, e
+     quello piu' in basso rimetteva la ricerca a tutta larghezza annullando
+     l'altra. Due blocchi alla stessa misura che si contraddicevano. */
   .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 18px 12px; }
   .grid-sm { grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); }
-  .brand { font-size: 18px; }
 
   /* Sul telefono il pulsante resta sempre visibile: non c'e' il passaggio del mouse. */
   .card-act { opacity: 1; font-size: 10.5px; padding: 3px 6px; }
-  .search { flex: 1 1 100%; }
 }
 
 
